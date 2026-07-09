@@ -138,18 +138,38 @@ def create_energysystem(
 
     if "electricity_grid" in components:
         row = sinks.loc[sinks.label == "electricity_grid", :]
+        subsidy_row = sinks.loc[sinks.label == "electricity_grid_subsidy"]
+        active_policies = (
+            data["policies"]
+            .loc[data["policies"]["activate"] == "x", ["policy", "value 1"]]
+            .set_index("policy")["value 1"]
+            .to_dict()
+        )
+
         electricity_grid = solph.components.Sink(
             label="electricity_grid",
             inputs={
                 busd[row.bus_in.item()]: solph.Flow(
                     nominal_capacity=row.nominal_capacity.item(),
-                    min=get_value_or_profile(row, "min", profiles),
-                    max=get_value_or_profile(row, "max", profiles),
                     variable_costs=get_value_or_profile(row, "variable_costs", profiles),
                 )
             },
         )
-        es.add(electricity_grid)
+        subsidy_specs = {
+            "nominal_capacity": row.nominal_capacity.item(),
+            "variable_costs": get_value_or_profile(subsidy_row, "variable_costs", profiles),
+        }
+
+        if "limitation of subsidized full load hours" in active_policies:
+            subsidy_specs["full_load_time_max"] = float(
+                active_policies["limitation of subsidized full load hours"]
+            )
+
+        electricity_premium = solph.components.Sink(
+            label="electricity_grid_subsidy",
+            inputs={busd[row.bus_in.item()]: solph.Flow(**subsidy_specs)},
+        )
+        es.add(electricity_grid, electricity_premium)
 
     if "heat_demand_mt" in components:
         row = sinks.loc[sinks.label == "heat_demand_mt", :]
@@ -695,6 +715,27 @@ def create_energysystem(
     om = solph.Model(es)
 
     print("The model has been constructed.")
+
+    # Set flow boundarie for electricity grid and electricity grid sybsidy sink
+    if "electricity_grid" in components:
+        row = sinks.loc[sinks.label == "electricity_grid", :]
+        nominal_capacity = row.nominal_capacity.item()
+        min = get_value_or_profile(row, "min", profiles)
+        max = get_value_or_profile(row, "max", profiles)
+
+        def value_at(profile, t):
+            return profile.iloc[t] if isinstance(profile, pd.Series) else profile
+
+        def electricity_flow_boundaries(om, t):
+            total_flow = (
+                om.flow[electricity_grid, busd[row.bus_in.item()], t]
+                + om.flow[electricity_premium, busd[row.bus_in.item()], t]
+            )
+            lower_bound = nominal_capacity * value_at(min, t)
+            upper_bound = nominal_capacity * value_at(max, t)
+            return (lower_bound, total_flow, upper_bound)
+
+        om.electricity_export_limit = Constraint(om.TIMESTEPS, rule=electricity_flow_boundaries)
 
     if "pyrolysis" in components:
         row = converters.loc[converters.label == "pyrolysis"]
