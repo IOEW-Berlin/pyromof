@@ -165,6 +165,9 @@ def create_energysystem(
                 active_policies["limitation of subsidized full load hours"]
             )
 
+        if "limitation of subsidized operating hours" in active_policies:
+            subsidy_specs["nonconvex"] = solph.NonConvex()
+
         electricity_premium = solph.components.Sink(
             label="electricity_grid_subsidy",
             inputs={busd[row.bus_in.item()]: solph.Flow(**subsidy_specs)},
@@ -728,14 +731,26 @@ def create_energysystem(
 
         def electricity_flow_boundaries(om, t):
             total_flow = (
-                om.flow[electricity_grid, busd[row.bus_in.item()], t]
-                + om.flow[electricity_premium, busd[row.bus_in.item()], t]
+                om.flow[busd[row.bus_in.item()], electricity_grid, t]
+                + om.flow[busd[row.bus_in.item()], electricity_premium, t]
             )
             lower_bound = nominal_capacity * value_at(min, t)
             upper_bound = nominal_capacity * value_at(max, t)
             return (lower_bound, total_flow, upper_bound)
 
         om.electricity_export_limit = Constraint(om.TIMESTEPS, rule=electricity_flow_boundaries)
+
+        if "limitation of subsidized operation time" in active_policies:
+            operation_time_limit = float(active_policies["limitation of subsidized operation time"])
+
+            def operation_time_constraint(om):
+                operation_time = sum(
+                    om.NonConvexFlowBlock.status[busd[row.bus_in.item()], electricity_premium, t]
+                    for t in om.TIMESTEPS
+                )
+                return operation_time <= operation_time_limit
+
+        om.limit_subsidized_operation_time = Constraint(rule=operation_time_constraint)
 
     if "pyrolysis" in components:
         row = converters.loc[converters.label == "pyrolysis"]

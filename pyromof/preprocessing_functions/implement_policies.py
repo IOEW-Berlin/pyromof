@@ -146,7 +146,7 @@ def check_policy_choice_compatibility(activated_policies):
             "Subsidy for co2 storage: lump sum" in activated_policies
             and "Subsidy for co2 storage: capex share" in activated_policies
         )
-        or(
+        or (
             "limitation of subsidized full load hours" in activated_policies
             and "limitation of subsidized operation time" in activated_policies
         )
