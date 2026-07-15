@@ -24,21 +24,15 @@ def receive_and_refine_electricity_price_data(profiles):
     return data_float
 
 
-def feed_in_tariff_policy(
-    sink: pd.DataFrame,
-    policies: pd.DataFrame,
-) -> pd.DataFrame:
+def feed_in_tariff_policy(data) -> pd.DataFrame:
 
     feed_in_premium = (
-        -1 / 100 * policies.loc[policies["policy"] == "feed in tariff", "value 1"].values[0]
+        -1 / 100 * data["policies"].loc[data["policies"]["policy"] == "feed in tariff", "value 1"].values[0]
     )
 
-    sink.loc[
-        (sink["label"] == "electricity_grid"),
-        "variable_costs",
-    ] = feed_in_premium
+    data["profiles"]["profile_electricity_premium"] = feed_in_premium
 
-    return sink
+    return data
 
 
 def feed_in_payment_sliding_premium(data) -> tuple[pd.Series, pd.Series, pd.Series]:
@@ -82,12 +76,7 @@ def sliding_premium_policy(data) -> tuple[pd.DataFrame, pd.DataFrame]:
 
     feed_in_revenue, _, _ = feed_in_payment_sliding_premium(data)
 
-    data["profiles"]["sliding_premium_profile"] = feed_in_revenue
-
-    data["sinks"].loc[
-        (data["sinks"]["label"] == "electricity_grid"),
-        "variable_costs",
-    ] = "sliding_premium_profile"
+    data["profiles"]["profile_electricity_premium"] = feed_in_revenue
 
     return data["sinks"], data["profiles"]
 
