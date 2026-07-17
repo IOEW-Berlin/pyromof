@@ -276,7 +276,7 @@ def calculate_exogenous_investment_costs(sequences, storage_contents, scenario):
             capacity = storage_contents[columnname_in_storage_contents].max()
             investment_cost = capacity * epcs.loc[epcs["object"] == row.label, "value"].item()
             results.append({"component": row.label, "investment_cost": investment_cost})
-    results = pd.DataFrame(results)
+    results = pd.DataFrame(results, columns=["component", "investment_cost"])
     scenario_results = scenario_results_path(scenario)
     results.to_csv(
         os.path.join(scenario_results, "exogenous_investment_costs.csv"),
