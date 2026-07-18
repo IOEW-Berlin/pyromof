@@ -160,12 +160,7 @@ def create_energysystem(
             "variable_costs": get_value_or_profile(subsidy_row, "variable_costs", profiles),
         }
 
-        if "limitation of subsidized full load hours" in active_policies:
-            subsidy_specs["full_load_time_max"] = float(
-                active_policies["limitation of subsidized full load hours"]
-            )
-
-        if "limitation of subsidized operating hours" in active_policies:
+        if "limitation of subsidized operation time" in active_policies:
             subsidy_specs["nonconvex"] = solph.NonConvex()
 
         electricity_premium = solph.components.Sink(
@@ -740,6 +735,26 @@ def create_energysystem(
 
         om.electricity_export_limit = Constraint(om.TIMESTEPS, rule=electricity_flow_boundaries)
 
+        if "limitation of subsidized full load hours" in active_policies:
+            full_load_hours_limit = float(
+                active_policies["limitation of subsidized full load hours"]
+            )
+            chp_row = converters.loc[converters.label == "chp"]
+            electricity_bus_out = busd[chp_row.bus_out_1.item()]
+
+            def full_load_hours_constraint(om):
+                subsidized_electricity = sum(
+                    om.flow[busd[row.bus_in.item()], electricity_premium, t] for t in om.TIMESTEPS
+                )
+
+                if chp_row.investment.item() is True:
+                    chp_capacity = om.InvestmentFlowBlock.invest[chp, electricity_bus_out]
+                elif chp_row.investment.item() is False:
+                    chp_capacity = chp_row.nominal_capacity.item()
+                return subsidized_electricity <= full_load_hours_limit * chp_capacity
+
+            om.limit_subsidized_full_load_hours = Constraint(rule=full_load_hours_constraint)
+
         if "limitation of subsidized operation time" in active_policies:
             operation_time_limit = float(active_policies["limitation of subsidized operation time"])
 
@@ -750,7 +765,7 @@ def create_energysystem(
                 )
                 return operation_time <= operation_time_limit
 
-        om.limit_subsidized_operation_time = Constraint(rule=operation_time_constraint)
+                om.limit_subsidized_operation_time = Constraint(rule=operation_time_constraint)
 
     if "pyrolysis" in components:
         row = converters.loc[converters.label == "pyrolysis"]
@@ -869,7 +884,7 @@ def create_energysystem(
     from pyomo.opt import SolverStatus, TerminationCondition
 
     print("Solving the model...")
-    om.solve(solver="cbc", tee=True)
+    om.solve(solver="gurobi", tee=True)
 
     # Check solver status
     if (
