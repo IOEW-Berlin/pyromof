@@ -737,9 +737,10 @@ def create_energysystem(
         om.electricity_export_limit = Constraint(om.TIMESTEPS, rule=electricity_flow_boundaries)
 
         if "limitation of subsidized full load hours" in active_policies:
-            full_load_hours_limit = float(
+            full_load_hours_limit_percentage = float(
                 active_policies["limitation of subsidized full load hours"]
             )
+            full_load_hours_limit = full_load_hours_limit_percentage / 100 * len(om.TIMESTEPS)
             chp_row = converters.loc[converters.label == "chp"]
             electricity_bus_out = busd[chp_row.bus_out_1.item()]
 
@@ -757,7 +758,10 @@ def create_energysystem(
             om.limit_subsidized_full_load_hours = Constraint(rule=full_load_hours_constraint)
 
         if "limitation of subsidized operation time" in active_policies:
-            operation_time_limit = float(active_policies["limitation of subsidized operation time"])
+            operation_time_limit_percentage = float(
+                active_policies["limitation of subsidized operation time"]
+            )
+            operation_time_limit = operation_time_limit_percentage / 100 * len(om.TIMESTEPS)
 
             def operation_time_constraint(om):
                 operation_time = sum(
