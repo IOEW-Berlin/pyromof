@@ -678,18 +678,16 @@ def create_energysystem(
             storage = solph.components.GenericStorage(
                 label=label,
                 inputs={
-                    busd[row.bus_in]: solph.Flow(nominal_capacity=solph.Investment()),
+                    busd[row.bus_in]: solph.Flow(),
                 },
                 outputs={
-                    busd[row.bus_out]: solph.Flow(nominal_capacity=solph.Investment()),
+                    busd[row.bus_out]: solph.Flow(),
                 },
                 loss_rate=row.loss_rate,
                 initial_storage_level=row.initial_storage_level,
                 inflow_conversion_factor=row.inflow_conversion_factor,
                 outflow_conversion_factor=row.outflow_conversion_factor,
                 nominal_capacity=nominal_cap,
-                invest_relation_input_capacity=row.charge_rate,
-                invest_relation_output_capacity=row.charge_rate,
             )
         elif row.investment is False:
             power_limit = row.charge_rate * row.nominal_storage_capacity
@@ -861,6 +859,15 @@ def create_energysystem(
 
             return limit_discharge
 
+        def limit_charge_discharge_rate(bus, comp, is_input, rate):
+            # Factory function to create a charge/discharge rate constraint for a specific storage
+
+            def limit_rate(m, t):
+                flow = m.flow[(bus, comp), t] if is_input else m.flow[(comp, bus), t]
+                return flow <= rate * m.GenericInvestmentStorageBlock.invest[comp, 0]
+
+            return limit_rate
+
         for idx, (_, row) in enumerate(storage.iterrows()):
             label = row.label
             storage_component = next(n for n in es.nodes if n.label == label)
@@ -878,6 +885,29 @@ def create_energysystem(
                 f"flow_count_limit_discharge_{idx}",
                 Constraint(om.TIMESTEPS, rule=make_limit_discharge(storage_component, bus_out)),
             )
+            if row.investment is True:
+                charge_rate = row.charge_rate
+
+                setattr(
+                    om,
+                    f"charge_rate_limit_{idx}",
+                    Constraint(
+                        om.TIMESTEPS,
+                        rule=limit_charge_discharge_rate(
+                            bus_in, storage_component, True, charge_rate
+                        ),
+                    ),
+                )
+                setattr(
+                    om,
+                    f"discharge_rate_limit_{idx}",
+                    Constraint(
+                        om.TIMESTEPS,
+                        rule=limit_charge_discharge_rate(
+                            bus_out, storage_component, False, charge_rate
+                        ),
+                    ),
+                )
 
     # Store lp file
     file_path = os.path.join(META_INFO, "lp_file.lp")
