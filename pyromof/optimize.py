@@ -678,25 +678,28 @@ def create_energysystem(
             storage = solph.components.GenericStorage(
                 label=label,
                 inputs={
-                    busd[row.bus_in]: solph.Flow(),
+                    busd[row.bus_in]: solph.Flow(nominal_capacity=solph.Investment()),
                 },
                 outputs={
-                    busd[row.bus_out]: solph.Flow(),
+                    busd[row.bus_out]: solph.Flow(nominal_capacity=solph.Investment()),
                 },
                 loss_rate=row.loss_rate,
                 initial_storage_level=row.initial_storage_level,
                 inflow_conversion_factor=row.inflow_conversion_factor,
                 outflow_conversion_factor=row.outflow_conversion_factor,
                 nominal_capacity=nominal_cap,
+                invest_relation_input_capacity=row.charge_rate,
+                invest_relation_output_capacity=row.charge_rate,
             )
         elif row.investment is False:
+            power_limit = row.charge_rate * row.nominal_storage_capacity
             storage = solph.components.GenericStorage(
                 label=row.label,
                 inputs={
-                    busd[row.bus_in]: solph.Flow(),
+                    busd[row.bus_in]: solph.Flow(nominal_capacity=power_limit),
                 },
                 outputs={
-                    busd[row.bus_out]: solph.Flow(),
+                    busd[row.bus_out]: solph.Flow(nominal_capacity=power_limit),
                 },
                 loss_rate=row.loss_rate,
                 initial_storage_level=row.initial_storage_level,
