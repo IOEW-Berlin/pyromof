@@ -765,7 +765,7 @@ def create_energysystem(
                 )
                 return operation_time <= operation_time_limit
 
-                om.limit_subsidized_operation_time = Constraint(rule=operation_time_constraint)
+            om.limit_subsidized_operation_time = Constraint(rule=operation_time_constraint)
 
     if "pyrolysis" in components:
         row = converters.loc[converters.label == "pyrolysis"]
