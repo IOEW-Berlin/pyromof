@@ -748,7 +748,7 @@ def create_energysystem(
                 )
 
                 if chp_row.investment.item() is True:
-                    chp_capacity = om.InvestmentFlowBlock.invest[chp, electricity_bus_out]
+                    chp_capacity = om.InvestmentFlowBlock.invest[chp, electricity_bus_out, 0]
                 elif chp_row.investment.item() is False:
                     chp_capacity = chp_row.nominal_capacity.item()
                 return subsidized_electricity <= full_load_hours_limit * chp_capacity
