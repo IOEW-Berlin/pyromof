@@ -27,7 +27,9 @@ def receive_and_refine_electricity_price_data(profiles):
 def feed_in_tariff_policy(data) -> pd.DataFrame:
 
     feed_in_premium = (
-        -1 / 100 * data["policies"].loc[data["policies"]["policy"] == "feed in tariff", "value 1"].values[0]
+        -1
+        / 100
+        * data["policies"].loc[data["policies"]["policy"] == "feed in tariff", "value 1"].values[0]
     )
 
     data["profiles"]["profile_electricity_premium"] = feed_in_premium
