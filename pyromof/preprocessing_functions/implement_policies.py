@@ -11,6 +11,23 @@ from pyromof.preprocessing_functions.define_storage_subsidies import (
 )
 
 
+def flexinility_bonus(converters, policies, wacc):
+    flex_bonus_per_kw_and_year = policies.loc[
+        policies["policy"] == "Flexibility bonus", "value 1"
+    ].values[0]
+    flex_bonus_duration = policies.loc[policies["policy"] == "Flexibility bonus", "value 2"].values[
+        0
+    ]
+
+    # lump_sum_calc_factor: Converts the annual bonus to a lump sum capex reduction
+    # based on the duration of the bonus and the wacc.
+    lump_sum_calc_factor = (1 - (1 + wacc) ** -flex_bonus_duration) / wacc
+    subsidy_capex_reduction = flex_bonus_per_kw_and_year * lump_sum_calc_factor
+    converters.loc[(converters["label"] == "chp"), "capex"] -= subsidy_capex_reduction
+
+    return converters
+
+
 def receive_and_refine_electricity_price_data(profiles):
 
     timestamps = pd.to_datetime(profiles.index)
@@ -173,6 +190,13 @@ def redefine_input_data_for_policies(data, activated_policies):
             data["policies"],
         )
 
+    if "Flexibility bonus" in activated_policies:
+        wacc = data["general"].loc[data["general"]["label"] == "wacc", "value"].values[0]
+        data["converters"] = flexinility_bonus(
+            data["converters"],
+            data["policies"],
+            wacc,
+        )
     return data
 
 
