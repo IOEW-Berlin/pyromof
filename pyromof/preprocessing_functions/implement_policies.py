@@ -32,7 +32,7 @@ def receive_and_refine_electricity_price_data(profiles):
 
     timestamps = pd.to_datetime(profiles.index)
 
-    raw_data = profiles["electricity market price"]
+    raw_data = profiles["profile_electricity_remuneration"]
 
     data_float = raw_data.astype(float)
 
