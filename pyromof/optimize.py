@@ -77,6 +77,13 @@ def create_energysystem(
     converters = data["converters"]
     storage = data["storage"]
 
+
+    active_policies = (
+        data["policies"]
+        .loc[data["policies"]["activate"] == "x", ["policy", "value 1"]]
+        .set_index("policy")["value 1"]
+        .to_dict()
+        )
     # Model definition
     es = solph.EnergySystem(timeindex=time)
 
@@ -139,12 +146,6 @@ def create_energysystem(
     if "electricity_grid" in components:
         row = sinks.loc[sinks.label == "electricity_grid", :]
         subsidy_row = sinks.loc[sinks.label == "electricity_grid_subsidy"]
-        active_policies = (
-            data["policies"]
-            .loc[data["policies"]["activate"] == "x", ["policy", "value 1"]]
-            .set_index("policy")["value 1"]
-            .to_dict()
-        )
 
         electricity_grid = solph.components.Sink(
             label="electricity_grid",
@@ -155,6 +156,8 @@ def create_energysystem(
                 )
             },
         )
+    if "Sliding premium" in active_policies or "feed in tariff" in active_policies:
+
         subsidy_specs = {
             "nominal_capacity": row.nominal_capacity.item(),
             "variable_costs": get_value_or_profile(subsidy_row, "variable_costs", profiles),
@@ -921,7 +924,11 @@ def create_energysystem(
     from pyomo.opt import SolverStatus, TerminationCondition
 
     print("Solving the model...")
-    om.solve(solver="gurobi", tee=True)
+    om.solve(
+        solver="gurobi",
+        tee=True,
+        #cmdline_options={"MIPGap":0.02, "MIPFocus": 1, "TimeLimit": 1800},
+        )
 
     # Check solver status
     if (
