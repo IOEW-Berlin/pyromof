@@ -156,6 +156,8 @@ def create_energysystem(
                 )
             },
         )
+        es.add(electricity_grid)
+
     if "Sliding premium" in active_policies or "feed in tariff" in active_policies:
 
         subsidy_specs = {
@@ -170,7 +172,7 @@ def create_energysystem(
             label="electricity_grid_subsidy",
             inputs={busd[row.bus_in.item()]: solph.Flow(**subsidy_specs)},
         )
-        es.add(electricity_grid, electricity_premium)
+        es.add(electricity_premium)
 
     if "heat_demand_mt" in components:
         row = sinks.loc[sinks.label == "heat_demand_mt", :]
