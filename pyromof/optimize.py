@@ -145,7 +145,6 @@ def create_energysystem(
 
     if "electricity_grid" in components:
         row = sinks.loc[sinks.label == "electricity_grid", :]
-        subsidy_row = sinks.loc[sinks.label == "electricity_grid_subsidy"]
 
         electricity_grid = solph.components.Sink(
             label="electricity_grid",
@@ -162,7 +161,7 @@ def create_energysystem(
 
         subsidy_specs = {
             "nominal_capacity": row.nominal_capacity.item(),
-            "variable_costs": get_value_or_profile(subsidy_row, "variable_costs", profiles),
+            "variable_costs": data["profiles"]["profile_electricity_premium"],
         }
 
         if "limitation of subsidized operation time" in active_policies:
