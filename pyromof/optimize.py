@@ -832,6 +832,32 @@ def create_energysystem(
             om.tradeoff_upper_constraint = Constraint(om.TIMESTEPS, rule=tradeoff_bounds_upper)
             om.custom_ramp = Constraint(om.TIMESTEPS, rule=ramp_rule)
 
+    if "Flexibility bonus" in active_policies:
+        chp_row = converters.loc[converters.label == "chp"]
+
+        if chp_row.investment.item() is False:
+            bus_out = busd[chp_row.bus_out_1.item()]
+            capacity = chp_row.nominal_capacity.item()
+
+            policy_row = data["policies"].loc[
+                data["policies"]["policy"] == "Minimum load for flexibility bonus"
+            ]
+            min_load = float(policy_row["value 1"].values[0]) / 100
+            min_load_time_precentage = float(policy_row["value 2"].values[0])
+            min_load_time = min_load_time_precentage / 100 * len(om.TIMESTEPS)
+
+            om.HIGH_LOAD_STATUS = Var(om.TIMESTEPS, within=Binary)
+
+            def high_load_status_rule(om, t):
+                return om.flow[chp, bus_out, t] >= min_load * capacity * om.HIGH_LOAD_STATUS[t]
+
+            om.high_load_link = Constraint(om.TIMESTEPS, rule=high_load_status_rule)
+
+            def high_load_time_rule(om):
+                return sum(om.HIGH_LOAD_STATUS[t] for t in om.TIMESTEPS) >= min_load_time
+
+            om.minimum_load_constraing = Constraint(rule=high_load_time_rule)
+
     # Add active-flow-count-limit to avoid the use of storage to waste energy
     if not storage.empty:
         print("Creating flow count limits for storage")
