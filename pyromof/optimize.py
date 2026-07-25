@@ -77,13 +77,12 @@ def create_energysystem(
     converters = data["converters"]
     storage = data["storage"]
 
-
     active_policies = (
         data["policies"]
         .loc[data["policies"]["activate"] == "x", ["policy", "value 1"]]
         .set_index("policy")["value 1"]
         .to_dict()
-        )
+    )
     # Model definition
     es = solph.EnergySystem(timeindex=time)
 
@@ -158,7 +157,6 @@ def create_energysystem(
         es.add(electricity_grid)
 
     if "Sliding premium" in active_policies or "feed in tariff" in active_policies:
-
         subsidy_specs = {
             "nominal_capacity": row.nominal_capacity.item(),
             "variable_costs": data["profiles"]["profile_electricity_premium"],
@@ -723,22 +721,19 @@ def create_energysystem(
     if "electricity_grid" in components:
         row = sinks.loc[sinks.label == "electricity_grid", :]
         nominal_capacity = row.nominal_capacity.item()
-        min = get_value_or_profile(row, "min", profiles)
-        max = get_value_or_profile(row, "max", profiles)
+        min_value = get_value_or_profile(row, "min", profiles)
+        max_value = get_value_or_profile(row, "max", profiles)
+        bus_elec = busd[row.bus_in.item()]
 
-        def value_at(profile, t):
-            return profile.iloc[t] if isinstance(profile, pd.Series) else profile
-
-        def electricity_flow_boundaries(om, t):
-            total_flow = (
-                om.flow[busd[row.bus_in.item()], electricity_grid, t]
-                + om.flow[busd[row.bus_in.item()], electricity_premium, t]
-            )
-            lower_bound = nominal_capacity * value_at(min, t)
-            upper_bound = nominal_capacity * value_at(max, t)
-            return (lower_bound, total_flow, upper_bound)
-
-        om.electricity_export_limit = Constraint(om.TIMESTEPS, rule=electricity_flow_boundaries)
+        solph.constraints.shared_limit(
+            om,
+            om.flow,
+            "electricity_export_limit",
+            components=[(bus_elec, electricity_grid), (bus_elec, electricity_premium)],
+            weights=[1, 1],
+            lower_limit=nominal_capacity * min_value,
+            upper_limit=nominal_capacity * max_value,
+        )
 
         if "limitation of subsidized full load hours" in active_policies:
             full_load_hours_limit_percentage = float(
