@@ -76,6 +76,24 @@ def calculate_storage_charging_cycles(scalars, sequences, storage):
     return charging_cycles
 
 
+def calculate_high_load_hours(sequences, scalars, converters, min_load_value=0.85):
+    chp_output = sequences["chp to b_electricity"]
+
+    if converters.loc["chp", "investment"] is True:
+        capacity = scalars.loc[
+            scalars["variable"].str.contains("chp")
+            & scalars["type"].str.contains("built capacity"),
+            "value",
+        ].item()
+    else:
+        capacity = converters.loc["chp", "nominal_capacity"]
+
+    high_load_hours = (chp_output >= min_load_value * capacity).sum()
+    high_load_hours_percentage = (high_load_hours / len(chp_output)) * 100
+
+    return high_load_hours_percentage
+
+
 def measure_flexibility(scenarios: list):
     # Create a table with scenarios as column names and the elec fed in at negative price,
     # the share of total electricity fed in at negative price and the pyrolysis full load
@@ -103,6 +121,13 @@ def measure_flexibility(scenarios: list):
             sheet_name="storage",
             index_col=0,
         )
+
+        converters = pd.read_excel(
+            os.path.join(SCENARIO_META_INFO, "input_data.xlsx"),
+            sheet_name="converter",
+            index_col=0,
+        )
+
         fed_in_at_negative_price, share_of_total_electricity_fed_in = (
             calculate_electricity_fed_in_at_negative_price_timesteps(sequences, profiles)
         )
@@ -110,11 +135,16 @@ def measure_flexibility(scenarios: list):
 
         charging_cycles = calculate_storage_charging_cycles(scalars, sequences, storage)
 
+        high_load_hours_percentage = calculate_high_load_hours(sequences, scalars, converters)
+
         results.loc["fed_in_at_negative_price", scenario] = fed_in_at_negative_price
         results.loc["share_of_total_electricity_fed_in", scenario] = (
             share_of_total_electricity_fed_in
         )
         results.loc["pyrolysis_full_load_hours", scenario] = pyrolysis_full_load_hours
+        results.loc[
+            "time_at_85%_load (%); minimum time for biogas in germany is 11,4%", scenario
+        ] = high_load_hours_percentage
 
         # Append charging_cycles to results DataFrame
         for storage_name, cycles in charging_cycles.items():
