@@ -130,7 +130,7 @@ def percentage_investment_subsidy_policy(
     return converters
 
 
-def check_policy_choice_compatibility(activated_policies):
+def check_policy_choice_compatibility(activated_policies, converters):
 
     if (
         ("feed in tariff" in activated_policies and "Sliding premium" in activated_policies)
@@ -164,6 +164,37 @@ def check_policy_choice_compatibility(activated_policies):
             "Please check your input in the policies sheet."
         )
 
+    if "Flexibility bonus" in activated_policies and not (
+        "limitation of subsidized full load hours" in activated_policies
+        or "limitation of subsidized operation time" in activated_policies
+    ):
+        print(
+            "Warning: Flexibility bonus is activated without "
+            "limitation of full load hours or operation time. "
+            "Please check wheter this is intended. "
+            "In Germany, these instruments are used in combination."
+        )
+
+    if (
+        "High load time for chp" in activated_policies
+        and "Flexibility bonus" not in activated_policies
+    ):
+        print(
+            "Warning: High load time for chp is activated without "
+            "Flexibility bonus. Please check wheter this is intended. "
+            "Usually, the high load time is a restriction for the Flexibility bonus."
+        )
+
+    chp_row = converters.loc[converters["label"] == "chp"]
+    if (
+        "High load time for chp" in activated_policies
+        and not chp_row.empty
+        and chp_row["investment"].item() is True
+    ):
+        print(
+            "Warning: High load time for chp is activated, in chp investment mode. "
+            "The instrument does only effect the optimization in dispatch mode."
+        )
     else:
         return print("policies confirmed")
 
@@ -209,7 +240,7 @@ def implement_policies(data, scenario) -> None:
         .to_dict()
     )
 
-    check_policy_choice_compatibility(active_policies)
+    check_policy_choice_compatibility(active_policies, data["converters"])
 
     # drop column "scenario" from all tables where it exists
     for key in data:
