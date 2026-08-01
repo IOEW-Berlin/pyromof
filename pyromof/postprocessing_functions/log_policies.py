@@ -4,6 +4,7 @@ from pathlib import Path
 import pandas as pd
 
 from pyromof.postprocessing_functions.capex_policies import (
+    flexibility_bonus_subsidy,
     lump_sum_pyrolysis_subsidy,
     lump_sum_storage_subsidy,
     percentage_pyrolysis_subsidy,
@@ -47,6 +48,10 @@ def log_postprocessed_policies(data, scenario):
         "sliding premium": {
             "function": postprocess_sliding_premium,
             "type": "opex",
+        },
+        "Flexibility bonus": {
+            "function": flexibility_bonus_subsidy,
+            "type": "capex",
         },
         "Subsidy for pyrolysis investment costs: capex share": {
             "function": percentage_pyrolysis_subsidy,
