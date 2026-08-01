@@ -832,7 +832,7 @@ def create_energysystem(
             om.tradeoff_upper_constraint = Constraint(om.TIMESTEPS, rule=tradeoff_bounds_upper)
             om.custom_ramp = Constraint(om.TIMESTEPS, rule=ramp_rule)
 
-    if "Flexibility bonus" in active_policies:
+    if "High load time for chp" in active_policies:
         chp_row = converters.loc[converters.label == "chp"]
 
         if chp_row.investment.item() is False:
@@ -840,7 +840,7 @@ def create_energysystem(
             capacity = chp_row.nominal_capacity.item()
 
             policy_row = data["policies"].loc[
-                data["policies"]["policy"] == "Minimum load for flexibility bonus"
+                data["policies"]["policy"] == "High load time for chp"
             ]
             min_load = float(policy_row["value 1"].values[0]) / 100
             min_load_time_precentage = float(policy_row["value 2"].values[0])
