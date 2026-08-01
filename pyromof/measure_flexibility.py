@@ -10,6 +10,10 @@ def calculate_electricity_fed_in_at_negative_price_timesteps(sequences, profiles
     This function identifies the timesteps where electricity is fed into the grid
     at a negative price and sums up the amount of electricity fed in at these timesteps.
     """
+    electricity_columns = [
+        "b_electricity to electricity_grid",
+        "b_electricity to electricity_grid_subsidy",
+    ]
     # Align indices: keep only timestamps that exist in both dataframes
     common_index = sequences.index.intersection(profiles.index)
     sequences_aligned = sequences.loc[common_index]
@@ -24,15 +28,14 @@ def calculate_electricity_fed_in_at_negative_price_timesteps(sequences, profiles
     fed_in_at_negative_price = (
         sequences_aligned.loc[
             negative_price_timesteps,
-            sequences_aligned.columns.str.contains("b_electricity to electricity_grid"),
+            electricity_columns,
         ]
         .sum()
         .sum()
     )
 
     share_of_total_electricity_fed_in = (
-        fed_in_at_negative_price
-        / sequences_aligned["b_electricity to electricity_grid"].sum().sum()
+        fed_in_at_negative_price / sequences_aligned[electricity_columns].sum().sum()
     )
     return fed_in_at_negative_price, share_of_total_electricity_fed_in * 100
 
