@@ -290,6 +290,8 @@ def postprocess(dumping_space: Path | None = None, results: Path | None = None):
 
     # Read out the scenario from the input data
     input_data = read_raw_data("input_data.xlsx")
+    input_data["profiles"] = input_data["profiles"].set_index("timeindex")
+    input_data["profiles"].index = pd.to_datetime(input_data["profiles"].index)
     scenario = (
         input_data["general"].loc[input_data["general"]["label"] == "scenario", "value"].item()
     )
