@@ -37,7 +37,7 @@ def log_postprocessed_policies(data, scenario):
     )
     opex_label = " + ".join(active_opex)
 
-    check_policy_choice_compatibility(data["policies"])
+    check_policy_choice_compatibility(activated_policies, data["converters"])
     print("active policies:", activated_policies)
 
     policy_functions = {
@@ -45,7 +45,7 @@ def log_postprocessed_policies(data, scenario):
             "function": postprocess_feed_in_tariff,
             "type": "opex",
         },
-        "sliding premium": {
+        "Sliding premium": {
             "function": postprocess_sliding_premium,
             "type": "opex",
         },
