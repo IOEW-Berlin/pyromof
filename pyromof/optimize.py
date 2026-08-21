@@ -11,7 +11,7 @@ from typeguard import typechecked
 
 from pyromof import helpers, postprocessing
 from pyromof.paths import ROOT_PATH
-from pyromof.preprocessing_functions.preprocessing_input_data import preprocess
+from pyromof.preprocessing_functions.implement_input_data_functions import preprocess
 
 
 @typechecked
@@ -77,6 +77,12 @@ def create_energysystem(
     converters = data["converters"]
     storage = data["storage"]
 
+    active_policies = (
+        data["policies"]
+        .loc[data["policies"]["activate"] == "x", ["policy", "value 1"]]
+        .set_index("policy")["value 1"]
+        .to_dict()
+    )
     # Model definition
     es = solph.EnergySystem(timeindex=time)
 
@@ -116,9 +122,7 @@ def create_energysystem(
         biochar_market = solph.components.Sink(
             label="biochar_market",
             inputs={
-                busd[row.bus_in.item()]: solph.Flow(
-                    variable_costs=row.variable_costs.item()
-                ),
+                busd[row.bus_in.item()]: solph.Flow(variable_costs=row.variable_costs.item()),
             },
         )
         es.add(biochar_market)
@@ -140,20 +144,32 @@ def create_energysystem(
 
     if "electricity_grid" in components:
         row = sinks.loc[sinks.label == "electricity_grid", :]
+
         electricity_grid = solph.components.Sink(
             label="electricity_grid",
             inputs={
                 busd[row.bus_in.item()]: solph.Flow(
                     nominal_capacity=row.nominal_capacity.item(),
-                    min=get_value_or_profile(row, "min", profiles),
-                    max=get_value_or_profile(row, "max", profiles),
-                    variable_costs=get_value_or_profile(
-                        row, "variable_costs", profiles
-                    ),
+                    variable_costs=get_value_or_profile(row, "variable_costs", profiles),
                 )
             },
         )
         es.add(electricity_grid)
+
+    if "Sliding premium" in active_policies or "feed in tariff" in active_policies:
+        subsidy_specs = {
+            "nominal_capacity": row.nominal_capacity.item(),
+            "variable_costs": data["profiles"]["profile_electricity_premium"],
+        }
+
+        if "limitation of subsidized operation time" in active_policies:
+            subsidy_specs["nonconvex"] = solph.NonConvex()
+
+        electricity_premium = solph.components.Sink(
+            label="electricity_grid_subsidy",
+            inputs={busd[row.bus_in.item()]: solph.Flow(**subsidy_specs)},
+        )
+        es.add(electricity_premium)
 
     if "heat_demand_mt" in components:
         row = sinks.loc[sinks.label == "heat_demand_mt", :]
@@ -164,9 +180,7 @@ def create_energysystem(
                     nominal_capacity=row.nominal_capacity.item(),
                     min=get_value_or_profile(row, "min", profiles),
                     max=get_value_or_profile(row, "max", profiles),
-                    variable_costs=get_value_or_profile(
-                        row, "variable_costs", profiles
-                    ),
+                    variable_costs=get_value_or_profile(row, "variable_costs", profiles),
                 )
             },
         )
@@ -251,9 +265,7 @@ def create_energysystem(
         heat_source = solph.components.Source(
             label="heat_source",
             outputs={
-                busd[row.bus_out.item()]: solph.Flow(
-                    variable_costs=row.variable_costs.item()
-                )
+                busd[row.bus_out.item()]: solph.Flow(variable_costs=row.variable_costs.item())
             },
         )
         es.add(heat_source)
@@ -269,9 +281,7 @@ def create_energysystem(
                 inputs={busd[row.bus_in_1.item()]: solph.Flow()},
                 outputs={
                     busd[row.bus_out_1.item()]: solph.Flow(
-                        nominal_capacity=solph.Investment(
-                            ep_costs=epc, minimum=row.minimum.item()
-                        )
+                        nominal_capacity=solph.Investment(ep_costs=epc, minimum=row.minimum.item())
                     ),
                     busd[row.bus_out_2.item()]: solph.Flow(),
                 },
@@ -306,9 +316,7 @@ def create_energysystem(
                 inputs={busd[row.bus_in_1.item()]: solph.Flow()},
                 outputs={
                     busd[row.bus_out_1.item()]: solph.Flow(
-                        nominal_capacity=solph.Investment(
-                            ep_costs=epc, minimum=row.minimum.item()
-                        ),
+                        nominal_capacity=solph.Investment(ep_costs=epc, minimum=row.minimum.item()),
                     ),
                     busd[row.bus_out_2.item()]: solph.Flow(),
                     busd[row.bus_out_3.item()]: solph.Flow(),
@@ -351,9 +359,7 @@ def create_energysystem(
                 inputs={busd[row.bus_in_1.item()]: solph.Flow()},
                 outputs={
                     busd[row.bus_out_1.item()]: solph.Flow(
-                        nominal_capacity=solph.Investment(
-                            ep_costs=epc, minimum=row.minimum.item()
-                        ),
+                        nominal_capacity=solph.Investment(ep_costs=epc, minimum=row.minimum.item()),
                     ),
                 },
                 conversion_factors={
@@ -386,9 +392,7 @@ def create_energysystem(
                 inputs={busd[row.bus_in_1.item()]: solph.Flow()},
                 outputs={
                     busd[row.bus_out_1.item()]: solph.Flow(
-                        nominal_capacity=solph.Investment(
-                            ep_costs=epc, minimum=row.minimum.item()
-                        ),
+                        nominal_capacity=solph.Investment(ep_costs=epc, minimum=row.minimum.item()),
                     ),
                 },
                 conversion_factors={
@@ -556,9 +560,7 @@ def create_energysystem(
                 label="combustor_to_out1",
                 inputs={
                     busd["b_combustor_cap"]: solph.Flow(
-                        nominal_capacity=solph.Investment(
-                            ep_costs=epc, minimum=row.minimum.item()
-                        ),
+                        nominal_capacity=solph.Investment(ep_costs=epc, minimum=row.minimum.item()),
                     ),
                 },
                 outputs={
@@ -611,9 +613,7 @@ def create_energysystem(
                 },
                 outputs={
                     busd[row.bus_out_1.item()]: solph.Flow(
-                        nominal_capacity=solph.Investment(
-                            ep_costs=epc, minimum=row.minimum.item()
-                        )
+                        nominal_capacity=solph.Investment(ep_costs=epc, minimum=row.minimum.item())
                     ),  # cold syngas
                     busd[row.bus_out_2.item()]: solph.Flow(),  # heat
                     busd[row.bus_out_3.item()]: solph.Flow(),  # oil
@@ -692,13 +692,14 @@ def create_energysystem(
                 nominal_capacity=nominal_cap,
             )
         elif row.investment is False:
+            power_limit = row.charge_rate * row.nominal_storage_capacity
             storage = solph.components.GenericStorage(
                 label=row.label,
                 inputs={
-                    busd[row.bus_in]: solph.Flow(),
+                    busd[row.bus_in]: solph.Flow(nominal_capacity=power_limit),
                 },
                 outputs={
-                    busd[row.bus_out]: solph.Flow(),
+                    busd[row.bus_out]: solph.Flow(nominal_capacity=power_limit),
                 },
                 loss_rate=row.loss_rate,
                 initial_storage_level=row.initial_storage_level,
@@ -715,6 +716,60 @@ def create_energysystem(
     om = solph.Model(es)
 
     print("The model has been constructed.")
+
+    # Set flow boundarie for electricity grid and electricity grid sybsidy sink
+    if "electricity_grid" in components:
+        row = sinks.loc[sinks.label == "electricity_grid", :]
+        nominal_capacity = row.nominal_capacity.item()
+        min_value = get_value_or_profile(row, "min", profiles)
+        max_value = get_value_or_profile(row, "max", profiles)
+        bus_elec = busd[row.bus_in.item()]
+
+        solph.constraints.shared_limit(
+            om,
+            om.flow,
+            "electricity_export_limit",
+            components=[(bus_elec, electricity_grid), (bus_elec, electricity_premium)],
+            weights=[1, 1],
+            lower_limit=nominal_capacity * min_value,
+            upper_limit=nominal_capacity * max_value,
+        )
+
+        if "limitation of subsidized full load hours" in active_policies:
+            full_load_hours_limit_percentage = float(
+                active_policies["limitation of subsidized full load hours"]
+            )
+            full_load_hours_limit = full_load_hours_limit_percentage / 100 * len(om.TIMESTEPS)
+            chp_row = converters.loc[converters.label == "chp"]
+            electricity_bus_out = busd[chp_row.bus_out_1.item()]
+
+            def full_load_hours_constraint(om):
+                subsidized_electricity = sum(
+                    om.flow[busd[row.bus_in.item()], electricity_premium, t] for t in om.TIMESTEPS
+                )
+
+                if chp_row.investment.item() is True:
+                    chp_capacity = om.InvestmentFlowBlock.invest[chp, electricity_bus_out, 0]
+                elif chp_row.investment.item() is False:
+                    chp_capacity = chp_row.nominal_capacity.item()
+                return subsidized_electricity <= full_load_hours_limit * chp_capacity
+
+            om.limit_subsidized_full_load_hours = Constraint(rule=full_load_hours_constraint)
+
+        if "limitation of subsidized operation time" in active_policies:
+            operation_time_limit_percentage = float(
+                active_policies["limitation of subsidized operation time"]
+            )
+            operation_time_limit = operation_time_limit_percentage / 100 * len(om.TIMESTEPS)
+
+            def operation_time_constraint(om):
+                operation_time = sum(
+                    om.NonConvexFlowBlock.status[busd[row.bus_in.item()], electricity_premium, t]
+                    for t in om.TIMESTEPS
+                )
+                return operation_time <= operation_time_limit
+
+            om.limit_subsidized_operation_time = Constraint(rule=operation_time_constraint)
 
     if "pyrolysis" in components:
         row = converters.loc[converters.label == "pyrolysis"]
@@ -758,9 +813,7 @@ def create_energysystem(
                     out1 = om.flow[pyrolysis_component, bus_out_1, t]
                     out1_prev = om.flow[pyrolysis_component, bus_out_1, t - 1]
 
-                    status_t = om.NonConvexFlowBlock.status[
-                        pyrolysis_component, bus_out_1, t
-                    ]
+                    status_t = om.NonConvexFlowBlock.status[pyrolysis_component, bus_out_1, t]
                     status_prev = om.NonConvexFlowBlock.status[
                         pyrolysis_component, bus_out_1, t - 1
                     ]
@@ -775,13 +828,35 @@ def create_energysystem(
                         status_t - status_prev
                     )
 
-            om.tradeoff_lower_constraint = Constraint(
-                om.TIMESTEPS, rule=tradeoff_bounds_lower
-            )
-            om.tradeoff_upper_constraint = Constraint(
-                om.TIMESTEPS, rule=tradeoff_bounds_upper
-            )
+            om.tradeoff_lower_constraint = Constraint(om.TIMESTEPS, rule=tradeoff_bounds_lower)
+            om.tradeoff_upper_constraint = Constraint(om.TIMESTEPS, rule=tradeoff_bounds_upper)
             om.custom_ramp = Constraint(om.TIMESTEPS, rule=ramp_rule)
+
+    if "High load time for chp" in active_policies:
+        chp_row = converters.loc[converters.label == "chp"]
+
+        if chp_row.investment.item() is False:
+            bus_out = busd[chp_row.bus_out_1.item()]
+            capacity = chp_row.nominal_capacity.item()
+
+            policy_row = data["policies"].loc[
+                data["policies"]["policy"] == "High load time for chp"
+            ]
+            min_load = float(policy_row["value 1"].values[0]) / 100
+            min_load_time_precentage = float(policy_row["value 2"].values[0])
+            min_load_time = min_load_time_precentage / 100 * len(om.TIMESTEPS)
+
+            om.HIGH_LOAD_STATUS = Var(om.TIMESTEPS, within=Binary)
+
+            def high_load_status_rule(om, t):
+                return om.flow[chp, bus_out, t] >= min_load * capacity * om.HIGH_LOAD_STATUS[t]
+
+            om.high_load_link = Constraint(om.TIMESTEPS, rule=high_load_status_rule)
+
+            def high_load_time_rule(om):
+                return sum(om.HIGH_LOAD_STATUS[t] for t in om.TIMESTEPS) >= min_load_time
+
+            om.minimum_load_constraing = Constraint(rule=high_load_time_rule)
 
     # Add active-flow-count-limit to avoid the use of storage to waste energy
     if not storage.empty:
@@ -813,6 +888,15 @@ def create_energysystem(
 
             return limit_discharge
 
+        def limit_charge_discharge_rate(bus, comp, is_input, rate):
+            # Factory function to create a charge/discharge rate constraint for a specific storage
+
+            def limit_rate(m, t):
+                flow = m.flow[(bus, comp), t] if is_input else m.flow[(comp, bus), t]
+                return flow <= rate * m.GenericInvestmentStorageBlock.invest[comp, 0]
+
+            return limit_rate
+
         for idx, (_, row) in enumerate(storage.iterrows()):
             label = row.label
             storage_component = next(n for n in es.nodes if n.label == label)
@@ -823,17 +907,36 @@ def create_energysystem(
             setattr(
                 om,
                 f"flow_count_limit_charge_{idx}",
-                Constraint(
-                    om.TIMESTEPS, rule=make_limit_charge(bus_in, storage_component)
-                ),
+                Constraint(om.TIMESTEPS, rule=make_limit_charge(bus_in, storage_component)),
             )
             setattr(
                 om,
                 f"flow_count_limit_discharge_{idx}",
-                Constraint(
-                    om.TIMESTEPS, rule=make_limit_discharge(storage_component, bus_out)
-                ),
+                Constraint(om.TIMESTEPS, rule=make_limit_discharge(storage_component, bus_out)),
             )
+            if row.investment is True:
+                charge_rate = row.charge_rate
+
+                setattr(
+                    om,
+                    f"charge_rate_limit_{idx}",
+                    Constraint(
+                        om.TIMESTEPS,
+                        rule=limit_charge_discharge_rate(
+                            bus_in, storage_component, True, charge_rate
+                        ),
+                    ),
+                )
+                setattr(
+                    om,
+                    f"discharge_rate_limit_{idx}",
+                    Constraint(
+                        om.TIMESTEPS,
+                        rule=limit_charge_discharge_rate(
+                            bus_out, storage_component, False, charge_rate
+                        ),
+                    ),
+                )
 
     # Store lp file
     file_path = os.path.join(META_INFO, "lp_file.lp")
@@ -843,19 +946,20 @@ def create_energysystem(
     from pyomo.opt import SolverStatus, TerminationCondition
 
     print("Solving the model...")
-    om.solve(solver="cbc", tee=True)
+    om.solve(
+        solver="gurobi",
+        tee=True,
+        #cmdline_options={"MIPGap":0.02, "MIPFocus": 1, "TimeLimit": 1800},
+        )
 
     # Check solver status
     if (
         om.solver_results.Solver.Status == SolverStatus.warning
-        or om.solver_results.Solver.termination_condition
-        == TerminationCondition.infeasible
+        or om.solver_results.Solver.termination_condition == TerminationCondition.infeasible
     ):
         print("\n=== MODEL IS INFEASIBLE ===")
         print(f"Solver Status: {om.solver_results.Solver.Status}")
-        print(
-            f"Termination Condition: {om.solver_results.Solver.termination_condition}"
-        )
+        print(f"Termination Condition: {om.solver_results.Solver.termination_condition}")
 
     elif om.solver_results.Solver.termination_condition == TerminationCondition.optimal:
         print("\n=== MODEL SOLVED SUCCESSFULLY ===")
@@ -900,15 +1004,11 @@ def save_results(
         series = list([b for a, b in flows.items() if a == col][0].variable_costs)
         df[col] = series[: len(time) - 1]
     variable_costs = helpers.convert_tuple_columnnames_to_strings(df)
-    variable_costs.to_csv(
-        os.path.join(DUMPING_SPACE, "variable_costs_from_model.csv"), sep=";"
-    )
+    variable_costs.to_csv(os.path.join(DUMPING_SPACE, "variable_costs_from_model.csv"), sep=";")
 
     if epcs is not None:
         epcs_df = pd.DataFrame(epcs.items(), columns=["object", "value"])
-        epcs_df.to_csv(
-            os.path.join(DUMPING_SPACE, "epcs_from_optimization.csv"), sep=";"
-        )
+        epcs_df.to_csv(os.path.join(DUMPING_SPACE, "epcs_from_optimization.csv"), sep=";")
 
     # dump the EnergySystem
     es.dump(dpath=DUMPING_SPACE, filename="es_dump.oemof")
@@ -917,9 +1017,7 @@ def save_results(
 
 def optimize():
     data, time, scenario, epcs = preprocess("input_data.xlsx")
-    SCENARIO_PATH, META_INFO, DUMPING_SPACE = helpers.define_and_create_folders(
-        ROOT_PATH, scenario
-    )
+    SCENARIO_PATH, META_INFO, DUMPING_SPACE = helpers.define_and_create_folders(ROOT_PATH, scenario)
 
     # Save current input data version in the scenario folder
     shutil.copy("input_data.xlsx", os.path.join(META_INFO, "input_data.xlsx"))

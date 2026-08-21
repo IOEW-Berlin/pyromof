@@ -100,7 +100,7 @@ def calculate_ep_costs_for_all_components(
 
 
 def preprocess(relative_file_path="input_data.xlsx"):
-    from pyromof.policies.implement_policies import implement_policies
+    from pyromof.preprocessing_functions.implement_policies import implement_policies
 
     data = read_raw_data(relative_file_path)
     time = define_time_period(data["general"])
