@@ -489,7 +489,8 @@ def create_energysystem(
         # component can be optionally used to convert some additional
         # biochar to syngas, according to the input data parameters
         # out_1_max_decrease and out_2_corresponding_increase.
-        out_1_max_diff = row.eff_out_1.item() - row.out_1_max_change.item()
+        
+        out_1_max_diff = row.eff_out_1.item() - row.eff_out_1_mod.item()
         if out_1_max_diff != 0: 
             if out_1_max_diff > 0:
                 pyrolysis_t_variator_params = {
@@ -507,14 +508,16 @@ def create_energysystem(
                 inputs = pyrolysis_t_variator_params["inputs"],
                 outputs = pyrolysis_t_variator_params["outputs"],
                 conversion_factors={
-                    busd[row.bus_out_1.item()]: abs(row.eff_out_1.item() - row.out_1_max_change.item()),
-                    busd[row.bus_out_2.item()]: abs(row.out_2_corresponding_change.item() - row.eff_out_2.item()),
+                    busd[row.bus_out_1.item()]: abs(row.eff_out_1.item() - row.eff_out_1_mod.item()),
+                    busd[row.bus_out_2.item()]: abs(row.eff_out_2.item() - row.eff_out_2_mod.item()),
                 },
             )
             es.add(pyrolysis_t_variator)
+            print("Added pyrolysis_t_variator to the energy system to simulate temperature variations.")
 
         if out_1_max_diff == 0:
                 pass
+        
 
     if "heat_exchanger" in components:
         row = converters.loc[converters.label == "heat_exchanger"]
@@ -758,19 +761,20 @@ def create_energysystem(
             bus_out_2 = busd[row.bus_out_2.item()]
             eff_out_1 = row.eff_out_1.item()
 
-            out_1_max_diff = row.eff_out_1.item() - row.out_1_max_change.item()
+            out_1_max_diff = row.eff_out_1.item() - row.eff_out_1_mod.item()
+            
             if out_1_max_diff != 0:
                 def tradeoff_bounds(om, t):                    
                     if out_1_max_diff > 0:
                         produced_out_1 = om.flow[pyrolysis_component, bus_out_1, t]
                         converted_out_1 = om.flow[bus_out_1, pyrolysis_t_variator, t]
-                        return converted_out_1 <= (row.eff_out_1.item() - row.out_1_max_change.item()) * produced_out_1 / row.eff_out_1.item()
+                        return converted_out_1 <= (row.eff_out_1.item() - row.eff_out_1_mod.item()) * produced_out_1 / row.eff_out_1.item()
                     elif out_1_max_diff < 0:
                         produced_out_2 = om.flow[pyrolysis_component, bus_out_2, t]
-                        converted_out_2 = om.flow[pyrolysis_t_variator, bus_out_2, t]
-                        return converted_out_2 <= (row.eff_out_2.item() - row.out_2_max_change.item()) * produced_out_2 / row.eff_out_2.item()
+                        converted_out_2 = om.flow[bus_out_2, pyrolysis_t_variator, t]
+                        return converted_out_2 <= (row.eff_out_2.item() - row.eff_out_2_mod.item()) * produced_out_2 / row.eff_out_2.item()
 
-
+            
             def ramp_rule(om, t):
                 """
                 This constraint ensures that the ramping of the pyrolysis unit is limited according
@@ -803,7 +807,7 @@ def create_energysystem(
                         status_t - status_prev
                     )
 
-            om.tradeoff_lower_constraint = Constraint(
+            om.tradeoff_constraint = Constraint(
                 om.TIMESTEPS, rule=tradeoff_bounds
             )
             om.custom_ramp = Constraint(om.TIMESTEPS, rule=ramp_rule)
