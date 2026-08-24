@@ -485,6 +485,37 @@ def create_energysystem(
             )
         es.add(pyrolysis)
 
+        # In order to simulate temperature variations, the following 
+        # component can be optionally used to convert some additional
+        # biochar to syngas, according to the input data parameters
+        # out_1_max_decrease and out_2_corresponding_increase.
+        out_1_max_diff = row.eff_out_1.item() - row.out_1_max_change.item()
+        if out_1_max_diff != 0: 
+            if out_1_max_diff > 0:
+                pyrolysis_t_variator_params = {
+                    "inputs": {busd[row.bus_out_1.item()]: solph.Flow()},
+                    "outputs": {busd[row.bus_out_2.item()]: solph.Flow()},
+                }
+            elif out_1_max_diff < 0:
+                pyrolysis_t_variator_params = {
+                    "inputs": {busd[row.bus_out_2.item()]: solph.Flow()},
+                    "outputs": {busd[row.bus_out_1.item()]: solph.Flow()},
+                }
+
+            pyrolysis_t_variator = solph.components.Converter(
+                label="pyrolysis_t_variator",
+                inputs = pyrolysis_t_variator_params["inputs"],
+                outputs = pyrolysis_t_variator_params["outputs"],
+                conversion_factors={
+                    busd[row.bus_out_1.item()]: abs(row.eff_out_1.item() - row.out_1_max_change.item()),
+                    busd[row.bus_out_2.item()]: abs(row.out_2_corresponding_change.item() - row.eff_out_2.item()),
+                },
+            )
+            es.add(pyrolysis_t_variator)
+
+        if out_1_max_diff == 0:
+                pass
+
     if "heat_exchanger" in components:
         row = converters.loc[converters.label == "heat_exchanger"]
         if row.investment.item() is True:
@@ -727,21 +758,18 @@ def create_energysystem(
             bus_out_2 = busd[row.bus_out_2.item()]
             eff_out_1 = row.eff_out_1.item()
 
-            def tradeoff_bounds_lower(om, t):
-                out1 = om.flow[pyrolysis_component, bus_out_1, t]
-                out2 = om.flow[pyrolysis_component, bus_out_2, t]
-                min_ratio = (eff_out_1 + eff_out_1 * row.out_1_max_decrease.item()) / (
-                    row.eff_out_2.item()
-                    + row.eff_out_2.item() * row.out_2_corresponding_increase.item()
-                )
-                # Only enforce when biochar is active
-                return out1 >= min_ratio * out2
+            out_1_max_diff = row.eff_out_1.item() - row.out_1_max_change.item()
+            if out_1_max_diff != 0:
+                def tradeoff_bounds(om, t):                    
+                    if out_1_max_diff > 0:
+                        produced_out_1 = om.flow[pyrolysis_component, bus_out_1, t]
+                        converted_out_1 = om.flow[bus_out_1, pyrolysis_t_variator, t]
+                        return converted_out_1 <= (row.eff_out_1.item() - row.out_1_max_change.item()) * produced_out_1 / row.eff_out_1.item()
+                    elif out_1_max_diff < 0:
+                        produced_out_2 = om.flow[pyrolysis_component, bus_out_2, t]
+                        converted_out_2 = om.flow[pyrolysis_t_variator, bus_out_2, t]
+                        return converted_out_2 <= (row.eff_out_2.item() - row.out_2_max_change.item()) * produced_out_2 / row.eff_out_2.item()
 
-            def tradeoff_bounds_upper(om, t):
-                out1 = om.flow[pyrolysis_component, bus_out_1, t]
-                out2 = om.flow[pyrolysis_component, bus_out_2, t]
-                max_ratio = eff_out_1 / row.eff_out_2.item()
-                return out1 <= max_ratio * out2
 
             def ramp_rule(om, t):
                 """
@@ -776,10 +804,7 @@ def create_energysystem(
                     )
 
             om.tradeoff_lower_constraint = Constraint(
-                om.TIMESTEPS, rule=tradeoff_bounds_lower
-            )
-            om.tradeoff_upper_constraint = Constraint(
-                om.TIMESTEPS, rule=tradeoff_bounds_upper
+                om.TIMESTEPS, rule=tradeoff_bounds
             )
             om.custom_ramp = Constraint(om.TIMESTEPS, rule=ramp_rule)
 
