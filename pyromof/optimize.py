@@ -818,9 +818,10 @@ def create_energysystem(
                         status_t - status_prev
                     )
 
-            om.tradeoff_constraint = Constraint(
-                om.TIMESTEPS, rule=tradeoff_bounds
-            )
+            if out_1_max_diff != 0:
+                om.tradeoff_constraint = Constraint(
+                    om.TIMESTEPS, rule=tradeoff_bounds
+                )
             om.custom_ramp = Constraint(om.TIMESTEPS, rule=ramp_rule)
 
     # Add active-flow-count-limit to avoid the use of storage to waste energy
