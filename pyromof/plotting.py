@@ -25,6 +25,7 @@ def prepare_amount_sequences_for_plotting(RESULTS):
     )
     units = {
         "b_biochar": "kg",
+        "b_biochar_pre_shift": "kg",
         "b_co2": "kg",
         "b_electricity": "kWh",
         "b_electricity_2": "kWh",

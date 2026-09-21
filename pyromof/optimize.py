@@ -48,6 +48,7 @@ def extract_components_and_buses_from_input_data(
                 "bus_out_1",
                 "bus_out_2",
                 "bus_out_3",
+                "bus_out_4",
             ]
         ]
         .stack()
@@ -441,14 +442,12 @@ def create_energysystem(
                         ),
                     ),
                     busd[row.bus_out_2.item()]: solph.Flow(),
-                    busd[row.bus_out_3.item()]: solph.Flow(),
                 },
                 conversion_factors={
                     busd[row.bus_in_1.item()]: row.eff_in_1.item(),
                     busd[row.bus_in_2.item()]: row.eff_in_2.item(),
                     busd[row.bus_out_1.item()]: row.eff_out_1.item(),
                     busd[row.bus_out_2.item()]: row.eff_out_2.item(),
-                    busd[row.bus_out_3.item()]: row.eff_out_3.item(),
                 },
             )
         elif row.investment.item() is False:
@@ -473,14 +472,12 @@ def create_energysystem(
                         ),
                     ),
                     busd[row.bus_out_2.item()]: solph.Flow(),
-                    busd[row.bus_out_3.item()]: solph.Flow(),
                 },
                 conversion_factors={
                     busd[row.bus_in_1.item()]: row.eff_in_1.item(),
                     busd[row.bus_in_2.item()]: row.eff_in_2.item(),
                     busd[row.bus_out_1.item()]: row.eff_out_1.item(),
                     busd[row.bus_out_2.item()]: row.eff_out_2.item(),
-                    busd[row.bus_out_3.item()]: row.eff_out_3.item(),
                 },
             )
         es.add(pyrolysis)
@@ -517,6 +514,20 @@ def create_energysystem(
 
         if out_1_max_diff == 0:
                 pass
+
+        # generates certificates based on the biochar after pyrolysis_t_variator
+        certificate_generator = solph.components.Converter(
+            label="certificate_generator",
+            inputs={busd[row.bus_out_1.item()]: solph.Flow()},
+            outputs={
+                busd[row.bus_out_3.item()]: solph.Flow(),
+                busd[row.bus_out_4.item()]: solph.Flow(),
+            },
+            conversion_factors={
+                busd[row.bus_out_4.item()]: row.eff_out_3.item() / row.eff_out_1.item(),
+            },
+        )
+        es.add(certificate_generator)
         
 
     if "heat_exchanger" in components:
