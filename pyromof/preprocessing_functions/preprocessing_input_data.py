@@ -73,51 +73,76 @@ def validate_input_data_column_types(input_file):
 
     # Define input data column type rules for data type validation
 
+    prefix_rules = {"bus_": "str", "eff_": "numeric"}
+
+    common_rules = {"scenario": "str|list[str]", "label": "str"}
+
     sheet_rules = {
         "general": {
-            "default": "str",
-            "ignore": [],
-            "row_rules": {
-                "scenario": "str",
-                "start_time": "datetime",
-                "end_time": "datetime",
-                "wacc": "numeric",
-            },
+            "wacc": "numeric",
+            "scenario": "str",
+            "start_time": "datetime",
+            "end_time": "datetime",
         },
-        "sink": {"default": "numeric|str", "ignore": ["nominal_capacity", "unit", "comment"]},
+        "sink": {
+            "nominal_capacity": "numeric",
+            "min": "numeric|str",
+            "max": "numeric|str",
+            "variable_costs": "numeric|str",
+        },
         "source": {
-            "default": "numeric",
-            "ignore": ["min", "max", "capex", "lifetime", "unit", "comment"],
+            "nominal_capacity": "numeric",
+            "total_availability": "numeric",
+            "min": "numeric|str",
+            "max": "numeric|str",
+            "capex": "numeric",
+            "lifetime": "numeric",
+            "variable_costs": "numeric",
         },
         "converter": {
-            "default": "numeric",
-            "exceptions": {"investment": "bool", "capex": "numeric|str", "maximum": "numeric|str"},
-            "ignore": ["offset", "minimum", "comment", "comment 2"],
+            "nominal_capacity": "numeric",
+            "min_load_share": "numeric",
+            "minimum_downtime": "numeric",
+            "maximum_startups": "numeric",
+            "initial_status": "numeric",
+            "startup_costs": "numeric",
+            "positive_gradient_limit": "numeric",
+            "capex": "numeric|str",
+            "offset": "numeric",
+            "lifetime": "numeric",
+            "minimum": "numeric",
+            "maximum": "numeric|str",
+            "investment": "bool",
         },
         "storage": {
-            "default": "numeric",
-            "exceptions": {"investment": "bool", "loss_rate": "numeric|str"},
-        },
-        "profiles": {
-            "default": "numeric",
-            "ignore": ["timeindex", "profile_electricity"],
+            "loss_rate": "numeric|str",
+            "inflow_conversion_factor": "numeric",
+            "outflow_conversion_factor": "numeric",
+            "nominal_storage_capacity": "numeric",
+            "charge_rate": "numeric",
+            "initial_storage_level": "numeric",
+            "capex": "numeric",
+            "lifetime": "numeric",
+            "maximum": "numeric",
+            "investment": "bool",
         },
     }
 
-    prefix_rules = {"scenario": "str|list[str]", "bus_": "str", "eff_": "numeric", "label": "str"}
+    profiles_rule = {"exclude": ["timeindex"], "dtype": "numeric"}
 
     errors = []
 
     # implement column type rules
 
     def infer_dtype(sheet, col):
-        rules = sheet_rules.get(sheet, {})
-        if col in rules.get("exceptions", {}):
-            return rules["exceptions"][col]
+        if sheet == "profiles":
+            return None if col in profiles_rule["exclude"] else profiles_rule["dtype"]
         for prefix, dtype in prefix_rules.items():
             if col.startswith(prefix):
                 return dtype
-        return rules.get("default")
+        if col in common_rules:
+            return common_rules[col]
+        return sheet_rules.get(sheet, {}).get(col)
 
     def check_type(col_data, dtype, profile_cols=None):
 
@@ -217,21 +242,18 @@ def validate_input_data_column_types(input_file):
         profile_columns = set()
 
     # initiate loop for column type calidation
-    for sheet, rules in sheet_rules.items():
+    for sheet in [*sheet_rules, "profiles"]:
         try:
             df = pd.read_excel(input_file, sheet_name=sheet)
-            ignore = set(rules.get("ignore", []))
-            cols = [c for c in df.columns if c not in ignore]
 
             # row-wise validation for "general" sheet
             if sheet == "general":
-                row_rules = rules.get("row_rules", {})
                 for idx, row in df.iterrows():
                     label = row.get("label")
                     value = row.get("value")
                     if pd.isna(label) or pd.isna(value):
                         continue
-                    expected_dtype = row_rules.get(str(label))
+                    expected_dtype = sheet_rules["general"].get(str(label))
                     if expected_dtype:
                         if expected_dtype == "str" and not isinstance(value, str):
                             errors.append(f"{sheet}/row {idx}/value: Must be string")
@@ -243,8 +265,10 @@ def validate_input_data_column_types(input_file):
                 continue
 
             # create error messages
-            for col in cols:
+            for col in df.columns:
                 dtype = infer_dtype(sheet, col)
+                if dtype is None or df[col].isna().all():
+                    continue
                 error = check_type(df[col], dtype, profile_columns)
                 if error:
                     errors.append(f"{sheet}/{col}: {error}")
