@@ -1,4 +1,4 @@
-Datum;von;bis;electricity_price;sliding_premium_1;sliding_premium_2;total_revenue_1;total_revenue_2
+date;from;to;electricity_price;sliding_premium_1;sliding_premium_2;total_revenue_1;total_revenue_2
 01.01.2024;00:00;01:00;0,01;0;0;0,01;0,01
 01.01.2024;01:00;02:00;0,001;0;0;0,001;0,001
 01.01.2024;02:00;03:00;0;0;0;0;0

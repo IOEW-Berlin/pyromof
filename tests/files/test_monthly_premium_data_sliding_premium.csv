@@ -1,13 +1,13 @@
-Zeilenbeschriftungen;electricity_price_mean_monthly;Monat als Nummer für SVERWEIS;Niedrigste mtl. Marktprämie (aus Zuschlagswerten 2017-2025);Monat als Nummer für SVERWEIS;Höchste mtl. Marktprämie (aus Zuschlagswerten 2017 - 2025)
+month;electricity_price_mean_monthly;month_number;lowest_monthly_market_premium_2017_2025;month_number_2;highest_monthly_market_premium_2017_2025
 Jan;7,66;1;1,69;1;11,83
 Feb;6,13;2;3,22;2;13,36
-Mrz;6,47;3;2,88;3;13,02
+Mar;6,47;3;2,88;3;13,02
 Apr;6,24;4;3,11;4;13,25
-Mai;6,72;5;2,63;5;12,77
+May;6,72;5;2,63;5;12,77
 Jun;8,45;6;0,9;6;11,04
 Jul;6,77;7;2,58;7;12,72
 Aug;8,20;8;1,15;8;11,29
 Sep;7,83;9;1,52;9;11,66
-Okt;8,61;10;0,74;10;10,88
+Oct;8,61;10;0,74;10;10,88
 Nov;11,39;11;0;11;8,1
-Dez;10,83;12;0;12;8,66
+Dec;10,83;12;0;12;8,66
