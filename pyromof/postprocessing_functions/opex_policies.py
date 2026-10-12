@@ -1,3 +1,8 @@
+"""
+Calculates the electricity revenues for the opex-subsidies (feed-in tariff, sliding premium)
+after the optimization, split into market and government payment.
+"""
+
 import pandas as pd
 
 from pyromof.preprocessing_functions import implement_input_data_functions

@@ -1,3 +1,8 @@
+"""
+Reduces the capex of storage technologies in the input data based on the activated policies.
+The function is called in implement_policies.py
+"""
+
 from pyromof.preprocessing_functions.define_input_data_functions import read_raw_data
 
 

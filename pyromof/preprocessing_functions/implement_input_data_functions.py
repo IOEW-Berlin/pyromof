@@ -1,3 +1,7 @@
+"""
+Runs the preprocessing of the input data
+"""
+
 from pyromof.preprocessing_functions.define_input_data_functions import (
     calculate_ep_costs_for_all_components,
     define_time_period,

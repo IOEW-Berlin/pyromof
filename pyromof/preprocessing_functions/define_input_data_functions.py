@@ -1,3 +1,8 @@
+"""
+Defines the functions for the preprocessing of the input data, e.g. reading the data,
+filtering by time period and scenario and calculating the epcs.
+"""
+
 import pandas as pd
 from oemof.tools import economics
 from typeguard import typechecked

@@ -1,3 +1,8 @@
+"""
+Calculates the payments of capex subsidies (flexibility bonus, pyrolysis and storage
+subsidies) after the optimization.
+"""
+
 import pandas as pd
 
 from pyromof.preprocessing_functions import implement_input_data_functions

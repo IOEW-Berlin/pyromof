@@ -1,3 +1,8 @@
+"""
+Adjusts the input data based on the activated policies.
+The function is called in implement_input_data_functions.py
+"""
+
 from pathlib import Path
 
 import pandas as pd
