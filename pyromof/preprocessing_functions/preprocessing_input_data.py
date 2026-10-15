@@ -112,15 +112,15 @@ def validate_input_data_column_types(input_file):
             "initial_status": "numeric",
             "startup_costs": "numeric",
             "positive_gradient_limit": "numeric",
-            "capex": "numeric|str",
+            "capex": "numeric",
             "offset": "numeric",
             "lifetime": "numeric",
             "minimum": "numeric",
-            "maximum": "numeric|str",
+            "maximum": "numeric",
             "investment": "bool",
         },
         "storage": {
-            "loss_rate": "numeric|str",
+            "loss_rate": "numeric",
             "inflow_conversion_factor": "numeric",
             "outflow_conversion_factor": "numeric",
             "nominal_storage_capacity": "numeric",
@@ -161,7 +161,6 @@ def validate_input_data_column_types(input_file):
         ),
         "numeric|str": (
             "Enter a number or the name of a column in the sheet 'profiles'. "
-            "Several profile names can be separated by commas."
         ),
         "str|list[str]": "Enter text or a comma-separated list of texts, e.g. PyGas_CHP, Py_ORC.",
     }
@@ -290,4 +289,4 @@ def preprocess(relative_file_path):
 
 
 if __name__ == "__main__":
-    data, time = preprocess("input_data.xlsx")
+    data, time, scenario = preprocess("input_data.xlsx")
