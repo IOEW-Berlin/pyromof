@@ -37,7 +37,7 @@ def receive_chp_capacity(data, scalar_objective):
             .values[0]
         )
     else:
-        chp_capacity = receive_investment(data, scalar_objective, "built capacity [kW]")
+        chp_capacity = receive_investment(data, scalar_objective, "built capacity")
     return chp_capacity
 
 
@@ -72,7 +72,7 @@ def receive_pyrolysis_investment(data, scalar_objective):
         )
 
     else:
-        pyrolysis_investment = receive_investment(data, scalar_objective, "built capacity [kW]")
+        pyrolysis_investment = receive_investment(data, scalar_objective, "built capacity")
     return pyrolysis_investment
 
 
@@ -114,7 +114,7 @@ def percentage_pyrolysis_subsidy(data, subsidy_value, subsidized_investment, sca
 def lump_sum_storage_subsidy(data, subsidy_value, subsidized_investment, scalar_objective):
 
     subsidy = data["policies"].loc[data["policies"]["policy"] == subsidy_value, "value 1"].values[0]
-    storage_investment = receive_investment(data, scalar_objective, "built capacity [kWh]")
+    storage_investment = receive_investment(data, scalar_objective, "built capacity")
     total_subsidy = subsidy * storage_investment
     total_subsidy = round(total_subsidy, 1)
 
@@ -130,7 +130,7 @@ def percentage_storage_subsidy(data, subsidy_value, subsidized_investment, scala
         / 100
         * data["policies"].loc[data["policies"]["policy"] == subsidy_value, "value 1"].values[0]
     )
-    storage_investment = receive_investment(data, scalar_objective, "built capacity [kWh]")
+    storage_investment = receive_investment(data, scalar_objective, "built capacity")
     subsidy_per_installed_capacity = percentage_subsidy * storage_capex
     total_subsidy = subsidy_per_installed_capacity * storage_investment
     total_subsidy = round(total_subsidy, 1)
