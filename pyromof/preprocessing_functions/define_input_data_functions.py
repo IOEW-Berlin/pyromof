@@ -1,3 +1,8 @@
+"""
+Defines the functions for the preprocessing of the input data, e.g. reading the data,
+filtering by time period and scenario and calculating the epcs.
+"""
+
 import pandas as pd
 from oemof.tools import economics
 from typeguard import typechecked
@@ -100,7 +105,7 @@ def calculate_ep_costs_for_all_components(
 
 
 def preprocess(relative_file_path="input_data.xlsx"):
-    from pyromof.policies.implement_policies import implement_policies
+    from pyromof.preprocessing_functions.implement_policies import implement_policies
 
     data = read_raw_data(relative_file_path)
     time = define_time_period(data["general"])

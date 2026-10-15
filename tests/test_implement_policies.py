@@ -6,7 +6,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from pyromof.policies.implement_policies import feed_in_payment_sliding_premium
+from pyromof.preprocessing_functions.implement_policies import feed_in_payment_sliding_premium
 
 
 def receive_test_data(base_path):
@@ -19,7 +19,7 @@ def receive_test_data(base_path):
         decimal=",",
         dtype={"electricity_price": float, "sliding_premium_1": float, "total_revenue_1": float},
     )
-    timestamps = pd.to_datetime(electricity_data_sheet["Datum"], format="%d.%m.%Y")
+    timestamps = pd.to_datetime(electricity_data_sheet["date"], format="%d.%m.%Y")
 
     monthly_premium_sheet = pd.read_csv(
         os.path.join(base_path, "test_monthly_premium_data_sliding_premium.csv"),
