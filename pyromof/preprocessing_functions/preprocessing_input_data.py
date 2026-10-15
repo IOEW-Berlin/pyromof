@@ -97,7 +97,6 @@ def validate_input_data_column_types(input_file):
         },
         "source": {
             "nominal_capacity": "numeric",
-            "total_availability": "numeric",
             "min": "numeric|str",
             "max": "numeric|str",
             "capex": "numeric",
