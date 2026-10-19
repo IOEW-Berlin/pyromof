@@ -3,11 +3,9 @@ Collects the subsidy payments of all activated policies and
 saves them in results/<scenario>/results/policies_subsidies.csv.
 """
 
-import os
-from pathlib import Path
-
 import pandas as pd
 
+from pyromof.paths import scenario_results_path
 from pyromof.postprocessing_functions.capex_policies import (
     flexibility_bonus_subsidy,
     lump_sum_pyrolysis_subsidy,
@@ -166,9 +164,9 @@ def log_postprocessed_policies(data, scenario):
             )
     df = pd.DataFrame(rows)
 
-    results_dir = Path(__file__).resolve().parents[2] / "results" / scenario / "results"
+    results_dir = scenario_results_path(scenario)
 
-    df.to_csv(os.path.join(results_dir, "policies_subsidies.csv"), index=False, sep=";")
+    df.to_csv(results_dir / "policies_subsidies.csv", index=False, sep=";")
 
 
 if __name__ == "__main__":
