@@ -120,7 +120,7 @@ def lump_sum_investment_subsidy_policy(
     return converters
 
 
-def percentage_investment_subsidy_policy(
+def capex_share_investment_subsidy_policy(
     converters: pd.DataFrame, policies: pd.DataFrame
 ) -> pd.DataFrame:
 
@@ -156,8 +156,8 @@ def check_policy_choice_compatibility(activated_policies, converters):
             and "Subsidy for hydrogen storage: capex share" in activated_policies
         )
         or (
-            "Subsidy for co2 storage: lump sum" in activated_policies
-            and "Subsidy for co2 storage: capex share" in activated_policies
+            "Subsidy for syngas storage: lump sum" in activated_policies
+            and "Subsidy for syngas storage: capex share" in activated_policies
         )
         or (
             "limitation of subsidized full load hours" in activated_policies
@@ -221,7 +221,7 @@ def redefine_input_data_for_policies(data, activated_policies):
         )
 
     if "Subsidy for pyrolysis investment costs: capex share" in activated_policies:
-        data["converters"] = percentage_investment_subsidy_policy(
+        data["converters"] = capex_share_investment_subsidy_policy(
             data["converters"],
             data["policies"],
         )

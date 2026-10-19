@@ -89,7 +89,7 @@ def lump_sum_pyrolysis_subsidy(data, subsidy_value, subsidized_investment, scala
     return {"pyrolysis_capex_subsidy": total_subsidy}
 
 
-def percentage_pyrolysis_subsidy(data, subsidy_value, subsidized_investment, scalar_objective):
+def capex_share_pyrolysis_subsidy(data, subsidy_value, subsidized_investment, scalar_objective):
     pyrolysis_investment = receive_pyrolysis_investment(data, scalar_objective)
     percentage_subsidy = (
         1
@@ -122,7 +122,7 @@ def lump_sum_storage_subsidy(data, subsidy_value, subsidized_investment, scalar_
     return {subsidized_investment: total_subsidy}
 
 
-def percentage_storage_subsidy(data, subsidy_value, subsidized_investment, scalar_objective):
+def capex_share_storage_subsidy(data, subsidy_value, subsidized_investment, scalar_objective):
     storage_capex = (
         data["storage"].loc[data["storage"]["label"] == subsidized_investment, "capex"].values[0]
     )
@@ -141,16 +141,16 @@ def percentage_storage_subsidy(data, subsidy_value, subsidized_investment, scala
 if __name__ == "__main__":
     data, time, scenario = implement_input_data_functions.preprocess("input_data.xlsx")
     lump_sum_pyrolysis_subsidy(data)
-    percentage_pyrolysis_subsidy(data)
+    capex_share_pyrolysis_subsidy(data)
     lump_sum_storage_subsidy(
         data,
-        "electricity storage lump sum subsidy",
+        "Subsidy for electricity storage: lump sum",
         "electricity_storage",
         "electricity_storage_invest to None",
     )
-    percentage_storage_subsidy(
+    capex_share_storage_subsidy(
         data,
-        "electricity storage percentage subsidy",
+        "Subsidy for electricity storage: capex share",
         "electricity_storage",
         "electricity_storage_invest to None",
     )

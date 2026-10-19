@@ -16,10 +16,10 @@ def implement_storage_subsidies(data, active_policies):
             "syngas_storage": "Subsidy for syngas storage: lump sum",
         },
         "percentage": {
-            "electricity_storage": "Subsidy for electricity storage: percentage",
-            "heat_storage": "Subsidy for heat storage: percentage",
-            "h2_storage": "Subsidy for hydrogen storage: percentage",
-            "syngas_storage": "Subsidy for syngas storage: percentage",
+            "electricity_storage": "Subsidy for electricity storage: capex share",
+            "heat_storage": "Subsidy for heat storage: capex share",
+            "h2_storage": "Subsidy for hydrogen storage: capex share",
+            "syngas_storage": "Subsidy for syngas storage: capex share",
         },
     }
 

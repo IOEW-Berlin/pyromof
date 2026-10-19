@@ -7,11 +7,11 @@ import pandas as pd
 
 from pyromof.paths import scenario_results_path
 from pyromof.postprocessing_functions.capex_policies import (
+    capex_share_pyrolysis_subsidy,
+    capex_share_storage_subsidy,
     flexibility_bonus_subsidy,
     lump_sum_pyrolysis_subsidy,
     lump_sum_storage_subsidy,
-    percentage_pyrolysis_subsidy,
-    percentage_storage_subsidy,
 )
 from pyromof.postprocessing_functions.opex_policies import (
     postprocess_feed_in_tariff,
@@ -57,7 +57,7 @@ def log_postprocessed_policies(data, scenario):
             "type": "capex",
         },
         "Subsidy for pyrolysis investment costs: capex share": {
-            "function": percentage_pyrolysis_subsidy,
+            "function": capex_share_pyrolysis_subsidy,
             "type": "capex",
             "subsidy_value": "Subsidy for pyrolysis investment costs: capex share",
             "subsidized_investment": "pyrolysis",
@@ -77,8 +77,8 @@ def log_postprocessed_policies(data, scenario):
             "subsidized_investment": "electricity_storage",
             "scalar_objective": "electricity_storage_invest to None",
         },
-        "Subsidy for electricity storage: percentage": {
-            "function": percentage_storage_subsidy,
+        "Subsidy for electricity storage: capex share": {
+            "function": capex_share_storage_subsidy,
             "type": "capex",
             "subsidy_value": "Subsidy for electricity storage: capex share",
             "subsidized_investment": "electricity_storage",
@@ -91,36 +91,36 @@ def log_postprocessed_policies(data, scenario):
             "subsidized_investment": "heat_storage",
             "scalar_objective": "heat_storage_invest to None",
         },
-        "heat storage percentage subsidy": {
-            "function": percentage_storage_subsidy,
+        "Subsidy for heat storage: capex share": {
+            "function": capex_share_storage_subsidy,
             "type": "capex",
             "subsidy_value": "Subsidy for heat storage: capex share",
             "subsidized_investment": "heat_storage",
             "scalar_objective": "heat_storage_invest to None",
         },
-        "hydrogen storage lump sum subsidy": {
+        "Subsidy for hydrogen storage: lump sum": {
             "function": lump_sum_storage_subsidy,
             "type": "capex",
             "subsidy_value": "Subsidy for hydrogen storage: lump sum",
             "subsidized_investment": "h2_storage",
             "scalar_objective": "h2_storage_invest to None",
         },
-        "hydrogen storage percentage subsidy": {
-            "function": percentage_storage_subsidy,
+        "Subsidy for hydrogen storage: capex share": {
+            "function": capex_share_storage_subsidy,
             "type": "capex",
             "subsidy_value": "Subsidy for hydrogen storage: capex share",
             "subsidized_investment": "h2_storage",
             "scalar_objective": "h2_storage_invest to None",
         },
-        "syngas storage lump sum subsidy": {
+        "Subsidy for syngas storage: lump sum": {
             "function": lump_sum_storage_subsidy,
             "type": "capex",
             "subsidy_value": "Subsidy for syngas storage: lump sum",
             "subsidized_investment": "syngas_storage",
             "scalar_objective": "syngas_storage_invest to None",
         },
-        "syngas storage percentage subsidy": {
-            "function": percentage_storage_subsidy,
+        "Subsidy for syngas storage: capex share": {
+            "function": capex_share_storage_subsidy,
             "type": "capex",
             "subsidy_value": "Subsidy for syngas storage: capex share",
             "subsidized_investment": "syngas_storage",
