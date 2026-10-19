@@ -5,6 +5,7 @@ after the optimization, split into market and government payment.
 
 import pandas as pd
 
+from pyromof.paths import scenario_results_path
 from pyromof.preprocessing_functions import implement_input_data_functions
 from pyromof.preprocessing_functions.define_input_data_functions import (
     retrieve_scenario_from_input_data,
@@ -19,7 +20,7 @@ def receive_data(data: dict) -> tuple[pd.Series, pd.Series, pd.Series]:
     scenario = retrieve_scenario_from_input_data(data["general"])
 
     sequences = pd.read_csv(
-        f"./results/{scenario}/results/sequences.csv", sep=";", index_col=0, parse_dates=True
+        scenario_results_path(scenario) / "sequences.csv", sep=";", index_col=0, parse_dates=True
     )
     subsidized_electricity_output = sequences["b_electricity to electricity_grid_subsidy"]
     unsubsidized_electricity_output = sequences["b_electricity to electricity_grid"]

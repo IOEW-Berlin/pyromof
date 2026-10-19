@@ -5,6 +5,7 @@ subsidies) after the optimization.
 
 import pandas as pd
 
+from pyromof.paths import scenario_results_path
 from pyromof.preprocessing_functions import implement_input_data_functions
 from pyromof.preprocessing_functions.define_input_data_functions import (
     retrieve_scenario_from_input_data,
@@ -13,7 +14,7 @@ from pyromof.preprocessing_functions.define_input_data_functions import (
 
 def receive_investment(data, variable_name, type_name):
     scenario = retrieve_scenario_from_input_data(data["general"])
-    file_path = f"./results/{scenario}/results/scalar_results.csv"
+    file_path = scenario_results_path(scenario) / "scalar_results.csv"
     scalar_results = pd.read_csv(file_path, sep=";")
 
     result = scalar_results.loc[
