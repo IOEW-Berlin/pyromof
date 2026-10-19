@@ -146,11 +146,11 @@ if __name__ == "__main__":
         data,
         "Subsidy for electricity storage: lump sum",
         "electricity_storage",
-        "electricity_storage_invest to None",
+        "electricity_storage to None",
     )
     capex_share_storage_subsidy(
         data,
         "Subsidy for electricity storage: capex share",
         "electricity_storage",
-        "electricity_storage_invest to None",
+        "electricity_storage to None",
     )
