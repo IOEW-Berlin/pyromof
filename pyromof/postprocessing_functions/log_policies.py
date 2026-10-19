@@ -1,3 +1,8 @@
+"""
+Collects the subsidy payments of all activated polcicies and
+saves them in results/<scenario>/results/policies_subsidies.csv.
+"""
+
 import os
 from pathlib import Path
 
