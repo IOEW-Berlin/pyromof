@@ -1,5 +1,5 @@
 """
-Collects the subsidy payments of all activated polcicies and
+Collects the subsidy payments of all activated policies and
 saves them in results/<scenario>/results/policies_subsidies.csv.
 """
 
