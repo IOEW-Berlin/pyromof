@@ -1,10 +1,10 @@
 import os
-from pathlib import Path
 
 import pandas as pd
 import plotly.graph_objects as go
 
 from pyromof import helpers, measure_flexibility
+from pyromof.paths import RESULTS_DIR, scenario_results_path
 
 
 def merge_scalars_from_scenarios(scenarios, RESULTS):
@@ -23,9 +23,9 @@ def merge_scalars_from_scenarios(scenarios, RESULTS):
     cost_dataframes = []
     dataframes = []
     for scenario in scenarios:
-        SCENARIO_RESULTS = os.path.join(RESULTS, scenario, "results")
+        SCENARIO_RESULTS = scenario_results_path(scenario)
         scalar_results = pd.read_csv(
-            os.path.join(SCENARIO_RESULTS, "scalar_results.csv"), sep=";", index_col=0
+            SCENARIO_RESULTS / "scalar_results.csv", sep=";", index_col=0
         )
         dataframes.append(rename_columns_for_scenario(scalar_results, scenario))
 
@@ -47,9 +47,7 @@ def merge_scalars_from_scenarios(scenarios, RESULTS):
     for df in dataframes[1:]:
         merged_df = pd.merge(merged_df, df, on=key_columns, how="outer")
 
-    print(merged_cost_df)
-    print(merged_df)
-    merged_df.to_csv(os.path.join(RESULTS, "merged_scalar_results.csv"), sep=";", index=False)
+    merged_df.to_csv(RESULTS / "merged_scalar_results.csv", sep=";", index=False)
     return merged_cost_df
 
 
@@ -95,15 +93,16 @@ def plot_cost_scalars_comparison(multiscenario_scalcosts, scenarios, RESULTS):
     fig.update_layout(barmode="relative")
     # Save plot as html
     fig.write_html(os.path.join(RESULTS, "cost_scalars.html"))
+    # Save plot as svg - requires the installation of kaleido
+    # fig.write_image(os.path.join(RESULTS, "cost_scalars.svg"))
 
 
 def compare_scenarios():
-    ROOT_PATH = Path(__file__).parent.parent
-    RESULTS = os.path.join(ROOT_PATH, "results")
+    RESULTS = RESULTS_DIR
     scenarios = ["scenario1", "scenario2"]
     # Check if the scenarios exist and if not explain how to select scenarios
     for scenario in scenarios:
-        if not os.path.exists(os.path.join(RESULTS, scenario)):
+        if not (RESULTS / scenario).exists():
             raise ValueError(
                 f"Scenario {scenario} does not exist. Please select scenarios "
                 f"that are present in the results folder and enter them at "
@@ -113,3 +112,8 @@ def compare_scenarios():
     multiscenario_scalcosts = merge_scalars_from_scenarios(scenarios, RESULTS)
     plot_cost_scalars_comparison(multiscenario_scalcosts, scenarios, RESULTS)
     measure_flexibility.measure_flexibility(scenarios)
+    print("The results have been saved.")
+
+
+if __name__ == "__main__":
+    compare_scenarios()

@@ -1,17 +1,15 @@
 import datetime
-import os
-from pathlib import Path
 
 import pandas as pd
 from demandlib import bdew
+
+from pyromof.paths import PREPROCESSING_DIR
 
 
 def load_demand_profiles():
     # read example temperature series
     filename = "Lufttemperatur_2024_DWD.csv"
-    ROOT_PATH = Path(__file__).parent.parent
-    dirname = os.path.join(ROOT_PATH, "preprocessing")
-    datapath = os.path.join(dirname, filename)
+    datapath = PREPROCESSING_DIR / filename
 
     temperature = pd.read_csv(datapath, sep=";")["TT_TU"]
     temperature = temperature.mask((temperature < -50) | (temperature > 50))
@@ -66,4 +64,4 @@ def load_demand_profiles():
     # Calculate total heat demand
     demand["total"] = demand["efh"] + demand["mfh"] + demand["ghd"]
 
-    demand.to_csv(os.path.join(dirname, "heat_profile.csv"))
+    demand.to_csv(PREPROCESSING_DIR / "heat_profile.csv")

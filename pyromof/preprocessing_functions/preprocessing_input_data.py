@@ -1,4 +1,5 @@
 import pandas as pd
+from oemof.tools import economics
 from typeguard import typechecked
 
 
@@ -57,9 +58,11 @@ def filter_input_data_by_scenario(
     dfs = ["sinks", "sources", "converters", "storage"]
     # Filter sheets listed in dfs by scenario and leave the others unchanged
     data = {
-        name: df[df["scenario"].apply(matches_scenario, args=(scenario_wanted,))]
-        if name in dfs
-        else df
+        name: (
+            df[df["scenario"].apply(matches_scenario, args=(scenario_wanted,))]
+            if name in dfs
+            else df
+        )
         for name, df in data.items()
     }
     return data
@@ -278,13 +281,49 @@ def validate_input_data_column_types(input_file):
 
 
 def preprocess(relative_file_path):
+def calculate_ep_costs_for_time_period(capex, lifetime, wacc, time: pd.date_range):
+    annuity = economics.annuity(capex, lifetime, wacc)
+    time_period_hours = time.max() - time.min()
+    time_periods_per_year = 8760 / time_period_hours.total_seconds() * 3600
+    ep_costs = annuity / time_periods_per_year
+    return ep_costs
+
+
+def calculate_ep_costs_for_all_components(
+    data_filtered_by_scenario: pd.DataFrame, time: pd.date_range
+):
+    # Calculates ep costs for all converters and storage types and stores them.
+    general = data_filtered_by_scenario["general"]
+    wacc = general.loc[general["label"] == "wacc", "value"].item()
+    storage = data_filtered_by_scenario["storage"]
+    converters = data_filtered_by_scenario["converters"]
+
+    def process_dataframe(df, wacc, time):
+        results = {}
+        for i, row in df.iterrows():
+            epc = calculate_ep_costs_for_time_period(row.capex, row.lifetime, wacc, time)
+            results[row.label] = epc
+        return results
+
+    converters_results = process_dataframe(converters, wacc, time)
+    storage_results = process_dataframe(storage, wacc, time)
+    epcs = {**converters_results, **storage_results}
+
+    return epcs
+
+
+def preprocess(relative_file_path="input_data.xlsx"):
+    from pyromof.policies.implement_policies import implement_policies
+
     data = read_raw_data(relative_file_path)
     time = define_time_period(data["general"])
     data["profiles"] = slice_time_period_from_profiles(data["profiles"], time)
     scenario = retrieve_scenario_from_input_data(data["general"])
     data = filter_input_data_by_scenario(data, scenario)
     validate_input_data_column_types(relative_file_path)
-    return data, time, scenario
+    data = implement_policies(data, scenario)
+    epcs = calculate_ep_costs_for_all_components(data, time)
+    return data, time, scenario, epcs
 
 
 if __name__ == "__main__":

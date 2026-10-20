@@ -16,7 +16,7 @@ PIPELINE_STEPS = {
     "load_demand_profiles": load_demand_profiles.load_demand_profiles,
     "optimize": optimize.optimize,
     "postprocess": postprocessing.postprocess,
-    "plot_scenario_results": [
+    "plot": [
         plotting.plot_sequences_and_scalars,
         load_duration_curve.plot_load_duration_curves,
     ],

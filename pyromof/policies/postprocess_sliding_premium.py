@@ -1,14 +1,14 @@
 import os
-from pathlib import Path
 
 import pandas as pd
 
+from pyromof.helpers import add_items_to_scalar_results
+from pyromof.paths import scenario_meta_info_path, scenario_results_path
 from pyromof.policies.implement_policies import (
     feed_in_payment_sliding_premium,
     receive_and_refine_electricity_price_data,
     receive_higher_threshold_basis_and_lower_threshold_basis,
 )
-from pyromof.postprocessing import add_items_to_scalar_results
 from pyromof.preprocessing_functions import preprocessing_input_data
 
 
@@ -19,16 +19,28 @@ def receive_data(scenario: str, data: dict) -> tuple[pd.Series, pd.Series, float
     base_value, lower_threshold = receive_higher_threshold_basis_and_lower_threshold_basis(policies)
 
     pyrolysis_electricity_output = pd.read_csv(
-        f"./results/{scenario}/results/sequences.csv", sep=";", index_col=0, parse_dates=True
+        scenario_results_path(scenario) / "sequences.csv",
+        sep=";",
+        index_col=0,
+        parse_dates=True,
     )["b_electricity to electricity_grid"]
 
     electricity_price = receive_and_refine_electricity_price_data(data["profiles"])
 
-    return (electricity_price, pyrolysis_electricity_output, base_value, lower_threshold)
+    return (
+        electricity_price,
+        pyrolysis_electricity_output,
+        base_value,
+        lower_threshold,
+    )
 
 
 def calculate_payment_sums(
-    electricity_price, pyrolysis_electricity_output, base_value, lower_threshold
+    electricity_price,
+    pyrolysis_electricity_output,
+    base_value,
+    lower_threshold,
+    scenario,
 ):
 
     # calculate sliding premium and revenue per kwh
@@ -53,7 +65,7 @@ def calculate_payment_sums(
     sum_electricity_market_payment_euro = electricity_market_payment_euro.sum()
 
     # create csv file with payment sums
-    results_dir = Path(__file__).resolve().parents[2] / "results" / scenario / "results"
+    results_dir = scenario_results_path(scenario)
     df2 = pd.DataFrame({})
 
     sum_dict = {
@@ -68,7 +80,9 @@ def calculate_payment_sums(
     )
 
 
-def main(scenario: str, data) -> None:
+def main(scenario: str) -> None:
+    scenario_input_data_path = scenario_meta_info_path(scenario) / "input_data.xlsx"
+    data, __, __, __ = preprocessing_input_data.preprocess(scenario_input_data_path)
     (
         electricity_price_euro_per_kwh,
         pyrolysis_electricity_output,
@@ -77,10 +91,14 @@ def main(scenario: str, data) -> None:
     ) = receive_data(scenario, data)
 
     calculate_payment_sums(
-        electricity_price_euro_per_kwh, pyrolysis_electricity_output, base_value, lower_threshold
+        electricity_price_euro_per_kwh,
+        pyrolysis_electricity_output,
+        base_value,
+        lower_threshold,
+        scenario,
     )
 
 
 if __name__ == "__main__":
-    data, time, scenario = preprocessing_input_data.preprocess("input_data.xlsx")
-    main(scenario, data)
+    scenario = "Scenario_X"
+    main(scenario)

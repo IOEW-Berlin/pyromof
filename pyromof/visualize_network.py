@@ -1,5 +1,6 @@
-# The following code has been written by Tobias Hörter and Andreas Wunsch
-# and is available here: https://gitlab.cc-asp.fraunhofer.de/-/snippets/1016
+# The following code has been written by Tobias Hörter and Andreas Wunsch and
+# has been only slightly changed.
+# The original code is available here: https://gitlab.cc-asp.fraunhofer.de/-/snippets/1016
 # It has been published under the GPLv3 licence.
 
 import socket
