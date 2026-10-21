@@ -59,70 +59,60 @@ def log_postprocessed_policies(data, scenario):
         "Subsidy for pyrolysis investment costs: capex share": {
             "function": capex_share_pyrolysis_subsidy,
             "type": "capex",
-            "subsidy_value": "Subsidy for pyrolysis investment costs: capex share",
             "subsidized_investment": "pyrolysis",
             "scalar_objective": "pyrolysis to b_biochar_pre_shift",
         },
         "Subsidy for pyrolysis investment costs: lump sum": {
             "function": lump_sum_pyrolysis_subsidy,
             "type": "capex",
-            "subsidy_value": "Subsidy for pyrolysis investment costs: lump sum",
             "subsidized_investment": "pyrolysis",
             "scalar_objective": "pyrolysis to b_biochar_pre_shift",
         },
         "Subsidy for electricity storage: lump sum": {
             "function": lump_sum_storage_subsidy,
             "type": "capex",
-            "subsidy_value": "Subsidy for electricity storage: lump sum",
             "subsidized_investment": "electricity_storage",
             "scalar_objective": "electricity_storage to None",
         },
         "Subsidy for electricity storage: capex share": {
             "function": capex_share_storage_subsidy,
             "type": "capex",
-            "subsidy_value": "Subsidy for electricity storage: capex share",
             "subsidized_investment": "electricity_storage",
             "scalar_objective": "electricity_storage to None",
         },
         "Subsidy for heat storage: lump sum": {
             "function": lump_sum_storage_subsidy,
             "type": "capex",
-            "subsidy_value": "Subsidy for heat storage: lump sum",
             "subsidized_investment": "heat_storage",
             "scalar_objective": "heat_storage to None",
         },
         "Subsidy for heat storage: capex share": {
             "function": capex_share_storage_subsidy,
             "type": "capex",
-            "subsidy_value": "Subsidy for heat storage: capex share",
             "subsidized_investment": "heat_storage",
             "scalar_objective": "heat_storage to None",
         },
         "Subsidy for hydrogen storage: lump sum": {
             "function": lump_sum_storage_subsidy,
             "type": "capex",
-            "subsidy_value": "Subsidy for hydrogen storage: lump sum",
             "subsidized_investment": "h2_storage",
             "scalar_objective": "h2_storage to None",
         },
         "Subsidy for hydrogen storage: capex share": {
             "function": capex_share_storage_subsidy,
             "type": "capex",
-            "subsidy_value": "Subsidy for hydrogen storage: capex share",
             "subsidized_investment": "h2_storage",
             "scalar_objective": "h2_storage to None",
         },
         "Subsidy for syngas storage: lump sum": {
             "function": lump_sum_storage_subsidy,
             "type": "capex",
-            "subsidy_value": "Subsidy for syngas storage: lump sum",
             "subsidized_investment": "syngas_storage",
             "scalar_objective": "syngas_storage to None",
         },
         "Subsidy for syngas storage: capex share": {
             "function": capex_share_storage_subsidy,
             "type": "capex",
-            "subsidy_value": "Subsidy for syngas storage: capex share",
             "subsidized_investment": "syngas_storage",
             "scalar_objective": "syngas_storage to None",
         },
@@ -138,15 +128,13 @@ def log_postprocessed_policies(data, scenario):
         policy_type = entry["type"]
 
         kwargs = {}
-        if (
-            "subsidy_value" in entry
-            and "subsidized_investment" in entry
-            and "scalar_objective" in entry
-        ):
-            kwargs["subsidy_value"] = entry["subsidy_value"]
-            kwargs["subsidized_investment"] = entry["subsidized_investment"]
-            kwargs["scalar_objective"] = entry["scalar_objective"]
-        result = function(data, **kwargs) if kwargs else function(data)
+        if "subsidized_investment" in entry:
+            kwargs = {
+                "subsidy_value": policy,
+                "subsidized_investment": entry["subsidized_investment"],
+                "scalar_objective": entry["scalar_objective"],
+            }
+        result = function(data, **kwargs)
 
         if policy_type == "opex":
             label = opex_label
