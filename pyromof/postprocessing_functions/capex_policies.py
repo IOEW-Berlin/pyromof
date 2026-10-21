@@ -43,7 +43,7 @@ def receive_chp_capacity(data, scalar_objective):
 
 
 def flexibility_bonus_subsidy(data):
-    policy_row = data["policies"].loc[data["policies"]["policy"] == "Flexibility bonus"]
+    policy_row = data["policies"].loc[data["policies"]["policy"] == "flexibility bonus"]
     flex_bonus_per_kw_and_year = float(policy_row["value 1"].values[0])
     flex_bonus_duration = float(policy_row["value 2"].values[0])
     chp_capacity = receive_chp_capacity(data, "chp to b_electricity")
@@ -144,13 +144,13 @@ if __name__ == "__main__":
     capex_share_pyrolysis_subsidy(data)
     lump_sum_storage_subsidy(
         data,
-        "Subsidy for electricity storage: lump sum",
+        "subsidy for electricity storage: lump sum",
         "electricity_storage",
         "electricity_storage to None",
     )
     capex_share_storage_subsidy(
         data,
-        "Subsidy for electricity storage: capex share",
+        "subsidy for electricity storage: capex share",
         "electricity_storage",
         "electricity_storage to None",
     )

@@ -18,9 +18,9 @@ from pyromof.preprocessing_functions.define_storage_subsidies import (
 
 def flexinility_bonus(converters, policies, wacc):
     flex_bonus_per_kw_and_year = policies.loc[
-        policies["policy"] == "Flexibility bonus", "value 1"
+        policies["policy"] == "flexibility bonus", "value 1"
     ].values[0]
-    flex_bonus_duration = policies.loc[policies["policy"] == "Flexibility bonus", "value 2"].values[
+    flex_bonus_duration = policies.loc[policies["policy"] == "flexibility bonus", "value 2"].values[
         0
     ]
 
@@ -74,13 +74,13 @@ def feed_in_payment_sliding_premium(data) -> tuple[pd.Series, pd.Series, pd.Seri
     base_value = (
         -1
         / 100
-        * data["policies"].loc[data["policies"]["policy"] == "Sliding premium", "value 1"].values[0]
+        * data["policies"].loc[data["policies"]["policy"] == "sliding premium", "value 1"].values[0]
     )
 
     lower_threshold = (
         -1
         / 100
-        * data["policies"].loc[data["policies"]["policy"] == "Sliding premium", "value 2"].values[0]
+        * data["policies"].loc[data["policies"]["policy"] == "sliding premium", "value 2"].values[0]
     )
 
     monthly_average_price = electricity_price.groupby(
@@ -110,7 +110,7 @@ def lump_sum_investment_subsidy_policy(
 ) -> pd.DataFrame:
 
     fix_subsidy = policies.loc[
-        policies["policy"] == "Subsidy for pyrolysis investment costs: lump sum", "value 1"
+        policies["policy"] == "subsidy for pyrolysis investment costs: lump sum", "value 1"
     ].values[0]
 
     converters.loc[(converters["label"] == "pyrolysis"), "capex"] = (
@@ -125,7 +125,7 @@ def capex_share_investment_subsidy_policy(
 ) -> pd.DataFrame:
 
     percentage_subsidy = policies.loc[
-        policies["policy"] == "Subsidy for pyrolysis investment costs: capex share", "value 1"
+        policies["policy"] == "subsidy for pyrolysis investment costs: capex share", "value 1"
     ].values[0]
 
     converters.loc[(converters["label"] == "pyrolysis"), "capex"] = converters.loc[
@@ -138,26 +138,26 @@ def capex_share_investment_subsidy_policy(
 def check_policy_choice_compatibility(activated_policies, converters):
 
     if (
-        ("feed in tariff" in activated_policies and "Sliding premium" in activated_policies)
+        ("feed in tariff" in activated_policies and "sliding premium" in activated_policies)
         or (
-            "Subsidy for pyrolysis investment costs: lump sum" in activated_policies
-            and "Subsidy for pyrolysis investment costs: capex share" in activated_policies
+            "subsidy for pyrolysis investment costs: lump sum" in activated_policies
+            and "subsidy for pyrolysis investment costs: capex share" in activated_policies
         )
         or (
-            "Subsidy for electricity storage: lump sum" in activated_policies
-            and "Subsidy for electricity storage: capex share" in activated_policies
+            "subsidy for electricity storage: lump sum" in activated_policies
+            and "subsidy for electricity storage: capex share" in activated_policies
         )
         or (
-            "Subsidy for heat storage: lump sum" in activated_policies
-            and "Subsidy for heat storage: capex share" in activated_policies
+            "subsidy for heat storage: lump sum" in activated_policies
+            and "subsidy for heat storage: capex share" in activated_policies
         )
         or (
-            "Subsidy for hydrogen storage: lump sum" in activated_policies
-            and "Subsidy for hydrogen storage: capex share" in activated_policies
+            "subsidy for hydrogen storage: lump sum" in activated_policies
+            and "subsidy for hydrogen storage: capex share" in activated_policies
         )
         or (
-            "Subsidy for syngas storage: lump sum" in activated_policies
-            and "Subsidy for syngas storage: capex share" in activated_policies
+            "subsidy for syngas storage: lump sum" in activated_policies
+            and "subsidy for syngas storage: capex share" in activated_policies
         )
         or (
             "limitation of subsidized full load hours" in activated_policies
@@ -169,7 +169,7 @@ def check_policy_choice_compatibility(activated_policies, converters):
             "Please check your input in the policies sheet."
         )
 
-    if "Flexibility bonus" in activated_policies and not (
+    if "flexibility bonus" in activated_policies and not (
         "limitation of subsidized full load hours" in activated_policies
         or "limitation of subsidized operation time" in activated_policies
     ):
@@ -181,8 +181,8 @@ def check_policy_choice_compatibility(activated_policies, converters):
         )
 
     if (
-        "High load time for chp" in activated_policies
-        and "Flexibility bonus" not in activated_policies
+        "high load time for chp" in activated_policies
+        and "flexibility bonus" not in activated_policies
     ):
         print(
             "Warning: High load time for chp is activated without "
@@ -192,7 +192,7 @@ def check_policy_choice_compatibility(activated_policies, converters):
 
     chp_row = converters.loc[converters["label"] == "chp"]
     if (
-        "High load time for chp" in activated_policies
+        "high load time for chp" in activated_policies
         and not chp_row.empty
         and chp_row["investment"].item() is True
     ):
@@ -211,22 +211,22 @@ def redefine_input_data_for_policies(data, activated_policies):
             data["sinks"],
             data["policies"],
         )
-    if "Sliding premium" in activated_policies:
+    if "sliding premium" in activated_policies:
         data["sinks"], data["profiles"] = sliding_premium_policy(data)
 
-    if "Subsidy for pyrolysis investment costs: lump sum" in activated_policies:
+    if "subsidy for pyrolysis investment costs: lump sum" in activated_policies:
         data["converters"] = lump_sum_investment_subsidy_policy(
             data["converters"],
             data["policies"],
         )
 
-    if "Subsidy for pyrolysis investment costs: capex share" in activated_policies:
+    if "subsidy for pyrolysis investment costs: capex share" in activated_policies:
         data["converters"] = capex_share_investment_subsidy_policy(
             data["converters"],
             data["policies"],
         )
 
-    if "Flexibility bonus" in activated_policies:
+    if "flexibility bonus" in activated_policies:
         wacc = data["general"].loc[data["general"]["label"] == "wacc", "value"].values[0]
         data["converters"] = flexinility_bonus(
             data["converters"],

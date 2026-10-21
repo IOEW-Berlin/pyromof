@@ -156,7 +156,7 @@ def create_energysystem(
         )
         es.add(electricity_grid)
 
-    if "Sliding premium" in active_policies or "feed in tariff" in active_policies:
+    if "sliding premium" in active_policies or "feed in tariff" in active_policies:
         subsidy_specs = {
             "nominal_capacity": row.nominal_capacity.item(),
             "variable_costs": data["profiles"]["profile_electricity_premium"],
@@ -832,7 +832,7 @@ def create_energysystem(
             om.tradeoff_upper_constraint = Constraint(om.TIMESTEPS, rule=tradeoff_bounds_upper)
             om.custom_ramp = Constraint(om.TIMESTEPS, rule=ramp_rule)
 
-    if "High load time for chp" in active_policies:
+    if "high load time for chp" in active_policies:
         chp_row = converters.loc[converters.label == "chp"]
 
         if chp_row.investment.item() is False:
@@ -840,7 +840,7 @@ def create_energysystem(
             capacity = chp_row.nominal_capacity.item()
 
             policy_row = data["policies"].loc[
-                data["policies"]["policy"] == "High load time for chp"
+                data["policies"]["policy"] == "high load time for chp"
             ]
             min_load = float(policy_row["value 1"].values[0]) / 100
             min_load_time_precentage = float(policy_row["value 2"].values[0])

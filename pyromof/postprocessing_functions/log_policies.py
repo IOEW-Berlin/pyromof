@@ -48,69 +48,69 @@ def log_postprocessed_policies(data, scenario):
             "function": postprocess_feed_in_tariff,
             "type": "opex",
         },
-        "Sliding premium": {
+        "sliding premium": {
             "function": postprocess_sliding_premium,
             "type": "opex",
         },
-        "Flexibility bonus": {
+        "flexibility bonus": {
             "function": flexibility_bonus_subsidy,
             "type": "capex",
         },
-        "Subsidy for pyrolysis investment costs: capex share": {
+        "subsidy for pyrolysis investment costs: capex share": {
             "function": capex_share_pyrolysis_subsidy,
             "type": "capex",
             "subsidized_investment": "pyrolysis",
             "scalar_objective": "pyrolysis to b_biochar_pre_shift",
         },
-        "Subsidy for pyrolysis investment costs: lump sum": {
+        "subsidy for pyrolysis investment costs: lump sum": {
             "function": lump_sum_pyrolysis_subsidy,
             "type": "capex",
             "subsidized_investment": "pyrolysis",
             "scalar_objective": "pyrolysis to b_biochar_pre_shift",
         },
-        "Subsidy for electricity storage: lump sum": {
+        "subsidy for electricity storage: lump sum": {
             "function": lump_sum_storage_subsidy,
             "type": "capex",
             "subsidized_investment": "electricity_storage",
             "scalar_objective": "electricity_storage to None",
         },
-        "Subsidy for electricity storage: capex share": {
+        "subsidy for electricity storage: capex share": {
             "function": capex_share_storage_subsidy,
             "type": "capex",
             "subsidized_investment": "electricity_storage",
             "scalar_objective": "electricity_storage to None",
         },
-        "Subsidy for heat storage: lump sum": {
+        "subsidy for heat storage: lump sum": {
             "function": lump_sum_storage_subsidy,
             "type": "capex",
             "subsidized_investment": "heat_storage",
             "scalar_objective": "heat_storage to None",
         },
-        "Subsidy for heat storage: capex share": {
+        "subsidy for heat storage: capex share": {
             "function": capex_share_storage_subsidy,
             "type": "capex",
             "subsidized_investment": "heat_storage",
             "scalar_objective": "heat_storage to None",
         },
-        "Subsidy for hydrogen storage: lump sum": {
+        "subsidy for hydrogen storage: lump sum": {
             "function": lump_sum_storage_subsidy,
             "type": "capex",
             "subsidized_investment": "h2_storage",
             "scalar_objective": "h2_storage to None",
         },
-        "Subsidy for hydrogen storage: capex share": {
+        "subsidy for hydrogen storage: capex share": {
             "function": capex_share_storage_subsidy,
             "type": "capex",
             "subsidized_investment": "h2_storage",
             "scalar_objective": "h2_storage to None",
         },
-        "Subsidy for syngas storage: lump sum": {
+        "subsidy for syngas storage: lump sum": {
             "function": lump_sum_storage_subsidy,
             "type": "capex",
             "subsidized_investment": "syngas_storage",
             "scalar_objective": "syngas_storage to None",
         },
-        "Subsidy for syngas storage: capex share": {
+        "subsidy for syngas storage: capex share": {
             "function": capex_share_storage_subsidy,
             "type": "capex",
             "subsidized_investment": "syngas_storage",
