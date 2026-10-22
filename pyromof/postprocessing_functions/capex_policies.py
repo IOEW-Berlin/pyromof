@@ -64,17 +64,15 @@ def receive_pyrolysis_investment(data, scalar_objective):
     investment = (
         data["converters"].loc[data["converters"]["label"] == "pyrolysis", "investment"].values[0]
     )
-    # *8.76 converts the biochar capacity from kg/h to t/year (8760 h/year / 1000 kg/t)
     if not investment:
         pyrolysis_investment = (
-            8.76
-            * data["converters"]
+            data["converters"]
             .loc[data["converters"]["label"] == "pyrolysis", "nominal_capacity"]
             .values[0]
         )
 
     else:
-        pyrolysis_investment = 8.76 * receive_investment(data, scalar_objective, "built capacity")
+        pyrolysis_investment = receive_investment(data, scalar_objective, "built capacity")
     return pyrolysis_investment
 
 

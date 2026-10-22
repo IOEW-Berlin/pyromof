@@ -38,7 +38,6 @@ def postprocess_feed_in_tariff(data):
 
     feed_in_tariff = (
         -1
-        / 100
         * data["policies"].loc[data["policies"]["policy"] == "feed in tariff", "value 1"].values[0]
     )
     government_payment_share = feed_in_tariff - electricity_price

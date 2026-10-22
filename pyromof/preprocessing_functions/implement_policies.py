@@ -50,7 +50,6 @@ def feed_in_tariff_policy(data) -> dict:
 
     feed_in_premium = (
         -1
-        / 100
         * data["policies"].loc[data["policies"]["policy"] == "feed in tariff", "value 1"].values[0]
     )
 
