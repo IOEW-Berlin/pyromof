@@ -46,7 +46,7 @@ def receive_and_refine_electricity_price_data(profiles):
     return data_float
 
 
-def feed_in_tariff_policy(data) -> pd.DataFrame:
+def feed_in_tariff_policy(data) -> dict:
 
     feed_in_premium = (
         -1
@@ -207,10 +207,7 @@ def check_policy_choice_compatibility(activated_policies, converters):
 def redefine_input_data_for_policies(data, activated_policies):
 
     if "feed in tariff" in activated_policies:
-        data["sinks"] = feed_in_tariff_policy(
-            data["sinks"],
-            data["policies"],
-        )
+        data = feed_in_tariff_policy(data)
     if "sliding premium" in activated_policies:
         data["sinks"], data["profiles"] = sliding_premium_policy(data)
 
