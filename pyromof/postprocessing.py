@@ -14,7 +14,10 @@ from pyromof.paths import (
     scenario_results_path,
 )
 from pyromof.postprocessing_functions.log_policies import log_postprocessed_policies
-from pyromof.preprocessing_functions.define_input_data_functions import read_raw_data
+from pyromof.preprocessing_functions.define_input_data_functions import (
+    filter_input_data_by_scenario,
+    read_raw_data,
+)
 
 
 def add_sums_to_scalar_results(data, description, scalar_results):
@@ -286,6 +289,8 @@ def postprocess(dumping_space: Path | None = None, results: Path | None = None):
     scenario = (
         input_data["general"].loc[input_data["general"]["label"] == "scenario", "value"].item()
     )
+
+    input_data = filter_input_data_by_scenario(input_data, scenario)
 
     if dumping_space is None:
         dumping_space = scenario_dumping_space_path(scenario)

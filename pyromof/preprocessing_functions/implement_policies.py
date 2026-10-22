@@ -28,7 +28,7 @@ def flexinility_bonus(converters, policies, wacc):
     # based on the duration of the bonus and the wacc.
     lump_sum_calc_factor = (1 - (1 + wacc) ** -flex_bonus_duration) / wacc
     subsidy_capex_reduction = flex_bonus_per_kw_and_year * lump_sum_calc_factor
-    converters.loc[(converters["label"] == "chp"), "capex"] -= subsidy_capex_reduction
+    converters.loc[converters["label"].isin(["chp", "orc"]), "capex"] -= subsidy_capex_reduction
 
     return converters
 
