@@ -8,7 +8,7 @@ from pyromof import optimize, postprocessing, preprocessing_functions
 from pyromof.paths import (
     scenario_results_path,
 )
-from pyromof.preprocessing_functions.preprocessing_input_data import (
+from pyromof.preprocessing_functions.define_input_data_functions import (
     calculate_ep_costs_for_all_components,
 )
 
@@ -34,9 +34,7 @@ def run_sensitivity_step(
     epcs = calculate_ep_costs_for_all_components(data, time)
 
     # OPTIMIZATION
-    es, om = optimize.create_energysystem(
-        META_INFO=META_INFO, data=data, time=time, epcs=epcs
-    )
+    es, om = optimize.create_energysystem(META_INFO=META_INFO, data=data, time=time, epcs=epcs)
     optimize.save_results(
         es,
         om,
@@ -48,15 +46,11 @@ def run_sensitivity_step(
     )
 
     # POSTPROCESSING
-    result_dfs = postprocessing.postprocess(
-        dumping_space=DUMPING_SPACE, results=THIS_SENSITIVITY
-    )
+    result_dfs = postprocessing.postprocess(dumping_space=DUMPING_SPACE, results=THIS_SENSITIVITY)
 
     postprocessing.check_scalar_costs_consistency(result_dfs["scalar_results"])
 
-    result_dfs["scalar_results"].rename(
-        columns={"value": parameter_value}, inplace=True
-    )
+    result_dfs["scalar_results"].rename(columns={"value": parameter_value}, inplace=True)
     return result_dfs["scalar_results"]
 
 
@@ -75,8 +69,8 @@ def analyze_sensitivity():
     scenario = "Scenario_X"
 
     # Definition of the time period
-    data, time, scenario, epcs = (
-        preprocessing_functions.preprocessing_input_data.preprocess("input_data.xlsx")
+    data, time, scenario, epcs = preprocessing_functions.preprocessing_input_data.preprocess(
+        "input_data.xlsx"
     )
 
     RESULTS = scenario_results_path(scenario)
