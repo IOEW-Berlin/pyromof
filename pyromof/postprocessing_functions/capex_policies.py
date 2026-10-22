@@ -113,10 +113,17 @@ def capex_share_pyrolysis_subsidy(data, subsidy_value, subsidized_investment, sc
     return {"pyrolysis_capex_subsidy": total_subsidy}
 
 
+def receive_storage_capacity(data, subsidized_investment, scalar_objective):
+    row = data["storage"].loc[data["storage"]["label"] == subsidized_investment]
+    if not row["investment"].values[0]:
+        return float(row["nominal_storage_capacity"].values[0])
+    return receive_investment(data, scalar_objective, "built capacity")
+
+
 def lump_sum_storage_subsidy(data, subsidy_value, subsidized_investment, scalar_objective):
 
     subsidy = data["policies"].loc[data["policies"]["policy"] == subsidy_value, "value 1"].values[0]
-    storage_investment = receive_investment(data, scalar_objective, "built capacity")
+    storage_investment = receive_storage_capacity(data, subsidized_investment, scalar_objective)
     total_subsidy = subsidy * storage_investment
     total_subsidy = round(total_subsidy, 1)
 
@@ -132,7 +139,7 @@ def capex_share_storage_subsidy(data, subsidy_value, subsidized_investment, scal
         / 100
         * data["policies"].loc[data["policies"]["policy"] == subsidy_value, "value 1"].values[0]
     )
-    storage_investment = receive_investment(data, scalar_objective, "built capacity")
+    storage_investment = receive_storage_capacity(data, subsidized_investment, scalar_objective)
     subsidy_per_installed_capacity = percentage_subsidy * storage_capex
     total_subsidy = subsidy_per_installed_capacity * storage_investment
     total_subsidy = round(total_subsidy, 1)
