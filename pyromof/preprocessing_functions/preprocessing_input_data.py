@@ -280,7 +280,6 @@ def validate_input_data_column_types(input_file):
         print("All types valid.")
 
 
-def preprocess(relative_file_path):
 def calculate_ep_costs_for_time_period(capex, lifetime, wacc, time: pd.date_range):
     annuity = economics.annuity(capex, lifetime, wacc)
     time_period_hours = time.max() - time.min()
