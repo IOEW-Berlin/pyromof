@@ -71,15 +71,11 @@ def feed_in_payment_sliding_premium(data) -> tuple[pd.Series, pd.Series, pd.Seri
     electricity_price = receive_and_refine_electricity_price_data(data["profiles"])
 
     base_value = (
-        -1
-        / 100
-        * data["policies"].loc[data["policies"]["policy"] == "sliding premium", "value 1"].values[0]
+        -1 * data["policies"].loc[data["policies"]["policy"] == "sliding premium", "value 1"].values[0]
     )
 
     lower_threshold = (
-        -1
-        / 100
-        * data["policies"].loc[data["policies"]["policy"] == "sliding premium", "value 2"].values[0]
+        - data["policies"].loc[data["policies"]["policy"] == "sliding premium", "value 2"].values[0]
     )
 
     monthly_average_price = electricity_price.groupby(
