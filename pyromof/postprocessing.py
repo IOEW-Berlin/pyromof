@@ -148,9 +148,7 @@ def add_investment_amount_to_scalar_results(scalars, scalar_results, epcs):
     dict = {}
     for columnName, columnData in scalars.items():
         dict[columnName] = columnData["invest"]
-    scalar_results = helpers.add_items_to_scalar_results(
-        dict, "built capacity", scalar_results
-    )
+    scalar_results = helpers.add_items_to_scalar_results(dict, "built capacity", scalar_results)
 
     investmentcost_dict = {}
     for key, value in dict.items():
