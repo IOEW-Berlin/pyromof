@@ -740,19 +740,22 @@ def create_energysystem(
                 active_policies["limitation of subsidized full load hours"]
             )
             full_load_hours_limit = full_load_hours_limit_percentage / 100 * len(om.TIMESTEPS)
-            chp_row = converters.loc[converters.label == "chp"]
-            electricity_bus_out = busd[chp_row.bus_out_1.item()]
+
+            # The limit is based on the capacity of the chp or orc, depending on the active scenario
+            generator_row = converters.loc[converters.label.isin(["chp", "orc"])]
+            generator = es.groups[generator_row.label.item()]
+            electricity_bus_out = busd[generator_row.bus_out_1.item()]
 
             def full_load_hours_constraint(om):
                 subsidized_electricity = sum(
                     om.flow[busd[row.bus_in.item()], electricity_premium, t] for t in om.TIMESTEPS
                 )
 
-                if chp_row.investment.item() is True:
-                    chp_capacity = om.InvestmentFlowBlock.invest[chp, electricity_bus_out, 0]
-                elif chp_row.investment.item() is False:
-                    chp_capacity = chp_row.nominal_capacity.item()
-                return subsidized_electricity <= full_load_hours_limit * chp_capacity
+                if generator_row.investment.item() is True:
+                    capacity = om.InvestmentFlowBlock.invest[generator, electricity_bus_out, 0]
+                elif generator_row.investment.item() is False:
+                    capacity = generator_row.nominal_capacity.item()
+                return subsidized_electricity <= full_load_hours_limit * capacity
 
             om.limit_subsidized_full_load_hours = Constraint(rule=full_load_hours_constraint)
 
