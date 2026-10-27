@@ -165,6 +165,18 @@ def check_policy_choice_compatibility(activated_policies, converters):
             "Please check your input in the policies sheet."
         )
 
+    if (
+        "limitation of subsidized full load hours" in activated_policies
+        or "limitation of subsidized operation time" in activated_policies
+    ) and not (
+        "sliding premium" in activated_policies or "feed in tariff" in activated_policies
+    ):
+        raise ValueError(
+            "The limitation of subsidized full load hours or operation time only works if "
+            "sliding premium or feed in tariff is active. \n"
+            "Please check your input in the policies sheet."
+        )
+
     if "flexibility bonus" in activated_policies and not (
         "limitation of subsidized full load hours" in activated_policies
         or "limitation of subsidized operation time" in activated_policies
