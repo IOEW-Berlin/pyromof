@@ -729,12 +729,17 @@ def create_energysystem(
         max_value = get_value_or_profile(row, "max", profiles)
         bus_elec = busd[row.bus_in.item()]
 
+        # The subsidy sink only exists if sliding premium or feed in tariff is active
+        export_components = [(bus_elec, electricity_grid)]
+        if "sliding premium" in active_policies or "feed in tariff" in active_policies:
+            export_components.append((bus_elec, electricity_premium))
+
         solph.constraints.shared_limit(
             om,
             om.flow,
             "electricity_export_limit",
-            components=[(bus_elec, electricity_grid), (bus_elec, electricity_premium)],
-            weights=[1, 1],
+            components=export_components,
+            weights=[1] * len(export_components),
             lower_limit=nominal_capacity * min_value,
             upper_limit=nominal_capacity * max_value,
         )
