@@ -16,7 +16,7 @@ from pyromof.preprocessing_functions.define_storage_subsidies import (
 )
 
 
-def flexinility_bonus(converters, policies, wacc):
+def flexibility_bonus(converters, policies, wacc):
     flex_bonus_per_kw_and_year = policies.loc[
         policies["policy"] == "flexibility bonus", "value 1"
     ].values[0]
@@ -221,7 +221,7 @@ def redefine_input_data_for_policies(data, activated_policies):
 
     if "flexibility bonus" in activated_policies:
         wacc = data["general"].loc[data["general"]["label"] == "wacc", "value"].values[0]
-        data["converters"] = flexinility_bonus(
+        data["converters"] = flexibility_bonus(
             data["converters"],
             data["policies"],
             wacc,
