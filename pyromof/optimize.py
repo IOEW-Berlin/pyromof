@@ -157,6 +157,7 @@ def create_energysystem(
         es.add(electricity_grid)
 
     if "sliding premium" in active_policies or "feed in tariff" in active_policies:
+        row = sinks.loc[sinks.label == "electricity_grid", :]
         subsidy_specs = {
             "nominal_capacity": row.nominal_capacity.item(),
             "variable_costs": data["profiles"]["profile_electricity_premium"],
