@@ -334,13 +334,13 @@ def postprocess(dumping_space: Path | None = None, results: Path | None = None):
 
     scalar_results = add_investment_amount_to_scalar_results(scalars, scalar_results, epcs)
 
-    exogeneous_investment_costs = calculate_exogenous_investment_costs(
+    exogenous_investment_costs = calculate_exogenous_investment_costs(
         sequences, storage_contents, scenario
     )
 
     # Add exogenous investment costs to scalar results
     costs_dict = {}
-    for _, row in exogeneous_investment_costs.iterrows():
+    for _, row in exogenous_investment_costs.iterrows():
         key = row["component"]
         costs_dict[key] = row["investment_cost"]
     scalar_results = helpers.add_items_to_scalar_results(

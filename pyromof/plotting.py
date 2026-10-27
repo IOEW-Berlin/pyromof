@@ -270,7 +270,7 @@ def plot_sequences_and_scalars():
 
     es = EnergySystem()
     es.restore(DUMPING_SPACE, "es_dump.oemof")
-    scenario = helpers.retreive_scenario_from_results(es)
+    scenario = helpers.retrieve_scenario_from_results(es)
     plot(scenario, RESULTS)
 
 

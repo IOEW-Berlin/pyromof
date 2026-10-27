@@ -172,7 +172,7 @@ def check_policy_choice_compatibility(activated_policies, converters):
         print(
             "Warning: Flexibility bonus is activated without "
             "limitation of full load hours or operation time. "
-            "Please check wheter this is intended. "
+            "Please check whether this is intended. "
             "In Germany, these instruments are used in combination."
         )
 
@@ -182,7 +182,7 @@ def check_policy_choice_compatibility(activated_policies, converters):
     ):
         print(
             "Warning: High load time for chp is activated without "
-            "Flexibility bonus. Please check wheter this is intended. "
+            "Flexibility bonus. Please check whether this is intended. "
             "Usually, the high load time is a restriction for the Flexibility bonus."
         )
 

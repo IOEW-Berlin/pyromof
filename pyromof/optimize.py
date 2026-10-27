@@ -717,7 +717,7 @@ def create_energysystem(
 
     print("The model has been constructed.")
 
-    # Set flow boundarie for electricity grid and electricity grid sybsidy sink
+    # Set flow boundaries for electricity grid and electricity grid subsidy sink
     if "electricity_grid" in components:
         row = sinks.loc[sinks.label == "electricity_grid", :]
         nominal_capacity = row.nominal_capacity.item()
@@ -778,7 +778,7 @@ def create_energysystem(
         row = converters.loc[converters.label == "pyrolysis"]
 
         if row.investment.item() is False:
-            print("Creating costum constraints for pyrolysis")
+            print("Creating custom constraints for pyrolysis")
 
             pyrolysis_component = pyrolysis
             bus_out_1 = busd[row.bus_out_1.item()]
@@ -846,8 +846,8 @@ def create_energysystem(
                 data["policies"]["policy"] == "high load time for chp"
             ]
             min_load = float(policy_row["value 1"].values[0]) / 100
-            min_load_time_precentage = float(policy_row["value 2"].values[0])
-            min_load_time = min_load_time_precentage / 100 * len(om.TIMESTEPS)
+            min_load_time_percentage = float(policy_row["value 2"].values[0])
+            min_load_time = min_load_time_percentage / 100 * len(om.TIMESTEPS)
 
             om.HIGH_LOAD_STATUS = Var(om.TIMESTEPS, within=Binary)
 
@@ -859,7 +859,7 @@ def create_energysystem(
             def high_load_time_rule(om):
                 return sum(om.HIGH_LOAD_STATUS[t] for t in om.TIMESTEPS) >= min_load_time
 
-            om.minimum_load_constraing = Constraint(rule=high_load_time_rule)
+            om.minimum_load_constraint = Constraint(rule=high_load_time_rule)
 
     # Add active-flow-count-limit to avoid the use of storage to waste energy
     if not storage.empty:

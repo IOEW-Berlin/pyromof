@@ -24,7 +24,7 @@ def calculate_electricity_fed_in_at_negative_price_timesteps(sequences, profiles
         profiles_aligned["profile_electricity_remuneration"] > 0
     ].index
 
-    # Sum up the electricity fed into the grid at these timestepsSS
+    # Sum up the electricity fed into the grid at these timesteps
     fed_in_at_negative_price = (
         sequences_aligned.loc[
             negative_price_timesteps,

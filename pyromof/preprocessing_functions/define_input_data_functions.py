@@ -46,7 +46,7 @@ def retrieve_scenario_from_input_data(general_df: pd.DataFrame) -> str:
 @typechecked
 def matches_scenario(scenario_to_check: str, scenario_wanted: str) -> bool:
     """
-    Checks wether the string "scenario to check" is either "all" or
+    Checks whether the string "scenario to check" is either "all" or
     includes the "scenario_wanted".
     "scenario_wanted" should be the scenario to be optimized,
     and "scenario_to_check" a scenario field
