@@ -6,7 +6,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from pyromof.policies.implement_policies import feed_in_payment_sliding_premium
+from pyromof.preprocessing_functions.implement_policies import feed_in_payment_sliding_premium
 
 
 def receive_test_data(base_path):
@@ -19,7 +19,7 @@ def receive_test_data(base_path):
         decimal=",",
         dtype={"electricity_price": float, "sliding_premium_1": float, "total_revenue_1": float},
     )
-    timestamps = pd.to_datetime(electricity_data_sheet["Datum"], format="%d.%m.%Y")
+    timestamps = pd.to_datetime(electricity_data_sheet["date"], format="%d.%m.%Y")
 
     monthly_premium_sheet = pd.read_csv(
         os.path.join(base_path, "test_monthly_premium_data_sliding_premium.csv"),
@@ -60,7 +60,7 @@ def receive_test_data(base_path):
     sliding_premium_1_template = -1 / 100 * electricity_data_sheet["sliding_premium_1"].round(4)
     sliding_premium_1_template = sliding_premium_1_template.reset_index(drop=True)
 
-    # reveive and refine total revenue
+    # receive and refine total revenue
     total_revenue_1_template = -1 / 100 * electricity_data_sheet["total_revenue_1"]
     total_revenue_1_template = total_revenue_1_template.round(4)
     total_revenue_1_template = total_revenue_1_template.reset_index(drop=True)
@@ -103,7 +103,7 @@ if np.allclose(
 else:
     print(
         f"monthly average electricity price test not passed: \
-        monthly average price tamplate:\
+        monthly average price template:\
         {monthly_average_electricity_price_template}\
         monthly average price test: \
         {monthly_average_electricity_price_test}"

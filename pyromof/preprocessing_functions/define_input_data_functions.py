@@ -1,3 +1,8 @@
+"""
+Defines the functions for the preprocessing of the input data, e.g. reading the data,
+filtering by time period and scenario and calculating the epcs.
+"""
+
 import pandas as pd
 from oemof.tools import economics
 from typeguard import typechecked
@@ -41,7 +46,7 @@ def retrieve_scenario_from_input_data(general_df: pd.DataFrame) -> str:
 @typechecked
 def matches_scenario(scenario_to_check: str, scenario_wanted: str) -> bool:
     """
-    Checks wether the string "scenario to check" is either "all" or
+    Checks whether the string "scenario to check" is either "all" or
     includes the "scenario_wanted".
     "scenario_wanted" should be the scenario to be optimized,
     and "scenario_to_check" a scenario field
@@ -100,7 +105,8 @@ def calculate_ep_costs_for_all_components(
 
 
 def preprocess(relative_file_path="input_data.xlsx"):
-    from pyromof.policies.implement_policies import implement_policies
+    # Imported here to avoid a circular import, as implement_policies imports from this module
+    from pyromof.preprocessing_functions.implement_policies import implement_policies
 
     data = read_raw_data(relative_file_path)
     time = define_time_period(data["general"])
@@ -113,4 +119,4 @@ def preprocess(relative_file_path="input_data.xlsx"):
 
 
 if __name__ == "__main__":
-    data, time = preprocess("input_data.xlsx")
+    data, time, scenario, epcs = preprocess("input_data.xlsx")

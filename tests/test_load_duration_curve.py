@@ -5,7 +5,7 @@ import pandas as pd
 
 from pyromof.load_duration_curve import (
     get_data_csv,
-    plot_load_duration_curve,
+    plot_load_duration_curves,
     sort_values_descending,
 )
 
@@ -21,7 +21,7 @@ def test_plot_load_duration_curve(tmp_path):
     """Test that plot is saved to file."""
     column = pd.Series([3, 2, 1])
     save_path = tmp_path / "test_plot.png"
-    plot_load_duration_curve(column, "x-title", "y-title", "title", str(save_path))
+    plot_load_duration_curves(column, "x-title", "y-title", "title", str(save_path))
     assert save_path.exists()
 
 
