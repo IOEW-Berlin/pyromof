@@ -11,7 +11,7 @@ from typeguard import typechecked
 
 from pyromof import helpers, postprocessing
 from pyromof.paths import ROOT_PATH
-from pyromof.preprocessing_functions.implement_input_data_functions import preprocess
+from pyromof.preprocessing_functions.define_input_data_functions import preprocess
 
 
 @typechecked

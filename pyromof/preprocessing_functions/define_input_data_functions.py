@@ -105,6 +105,7 @@ def calculate_ep_costs_for_all_components(
 
 
 def preprocess(relative_file_path="input_data.xlsx"):
+    # Imported here to avoid a circular import, as implement_policies imports from this module
     from pyromof.preprocessing_functions.implement_policies import implement_policies
 
     data = read_raw_data(relative_file_path)
@@ -118,4 +119,4 @@ def preprocess(relative_file_path="input_data.xlsx"):
 
 
 if __name__ == "__main__":
-    data, time = preprocess("input_data.xlsx")
+    data, time, scenario, epcs = preprocess("input_data.xlsx")

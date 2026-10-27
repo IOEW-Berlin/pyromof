@@ -1,6 +1,6 @@
 """
 Adjusts the input data based on the activated policies.
-The function is called in implement_input_data_functions.py
+The function is called in define_input_data_functions.py
 """
 
 from pathlib import Path

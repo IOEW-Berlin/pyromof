@@ -6,8 +6,8 @@ after the optimization, split into market and government payment.
 import pandas as pd
 
 from pyromof.paths import scenario_results_path
-from pyromof.preprocessing_functions import implement_input_data_functions
 from pyromof.preprocessing_functions.define_input_data_functions import (
+    preprocess,
     retrieve_scenario_from_input_data,
 )
 from pyromof.preprocessing_functions.implement_policies import (
@@ -82,6 +82,6 @@ def postprocess_sliding_premium(data):
 
 
 if __name__ == "__main__":
-    data, time, scenario = implement_input_data_functions.preprocess("input_data.xlsx")
+    data, time, scenario, epcs = preprocess("input_data.xlsx")
     postprocess_sliding_premium(data)
     postprocess_feed_in_tariff(data)

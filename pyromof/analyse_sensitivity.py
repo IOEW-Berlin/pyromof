@@ -4,12 +4,13 @@ from functools import reduce
 
 import pandas as pd
 
-from pyromof import optimize, postprocessing, preprocessing_functions
+from pyromof import optimize, postprocessing
 from pyromof.paths import (
     scenario_results_path,
 )
 from pyromof.preprocessing_functions.define_input_data_functions import (
     calculate_ep_costs_for_all_components,
+    preprocess,
 )
 
 
@@ -69,9 +70,7 @@ def analyze_sensitivity():
     scenario = "Scenario_X"
 
     # Definition of the time period
-    data, time, scenario, epcs = preprocessing_functions.preprocessing_input_data.preprocess(
-        "input_data.xlsx"
-    )
+    data, time, scenario, epcs = preprocess("input_data.xlsx")
 
     RESULTS = scenario_results_path(scenario)
     parameter_name = parameters["component"] + "_" + parameters["variable"]

@@ -6,8 +6,8 @@ subsidies) after the optimization.
 import pandas as pd
 
 from pyromof.paths import scenario_results_path
-from pyromof.preprocessing_functions import implement_input_data_functions
 from pyromof.preprocessing_functions.define_input_data_functions import (
+    preprocess,
     retrieve_scenario_from_input_data,
 )
 
@@ -145,7 +145,7 @@ def capex_share_storage_subsidy(data, subsidy_value, subsidized_investment, scal
 
 
 if __name__ == "__main__":
-    data, time, scenario = implement_input_data_functions.preprocess("input_data.xlsx")
+    data, time, scenario, epcs = preprocess("input_data.xlsx")
     lump_sum_pyrolysis_subsidy(data)
     capex_share_pyrolysis_subsidy(data)
     lump_sum_storage_subsidy(
