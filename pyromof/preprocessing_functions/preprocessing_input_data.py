@@ -326,4 +326,4 @@ def preprocess(relative_file_path="input_data.xlsx"):
 
 
 if __name__ == "__main__":
-    data, time, scenario = preprocess("input_data.xlsx")
+    data, time, scenario, epcs = preprocess("input_data.xlsx")
