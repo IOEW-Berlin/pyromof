@@ -48,6 +48,7 @@ def extract_components_and_buses_from_input_data(
                 "bus_out_1",
                 "bus_out_2",
                 "bus_out_3",
+                "bus_out_4",
             ]
         ]
         .stack()
@@ -441,14 +442,12 @@ def create_energysystem(
                         ),
                     ),
                     busd[row.bus_out_2.item()]: solph.Flow(),
-                    busd[row.bus_out_3.item()]: solph.Flow(),
                 },
                 conversion_factors={
                     busd[row.bus_in_1.item()]: row.eff_in_1.item(),
                     busd[row.bus_in_2.item()]: row.eff_in_2.item(),
                     busd[row.bus_out_1.item()]: row.eff_out_1.item(),
                     busd[row.bus_out_2.item()]: row.eff_out_2.item(),
-                    busd[row.bus_out_3.item()]: row.eff_out_3.item(),
                 },
             )
         elif row.investment.item() is False:
@@ -473,17 +472,63 @@ def create_energysystem(
                         ),
                     ),
                     busd[row.bus_out_2.item()]: solph.Flow(),
-                    busd[row.bus_out_3.item()]: solph.Flow(),
                 },
                 conversion_factors={
                     busd[row.bus_in_1.item()]: row.eff_in_1.item(),
                     busd[row.bus_in_2.item()]: row.eff_in_2.item(),
                     busd[row.bus_out_1.item()]: row.eff_out_1.item(),
                     busd[row.bus_out_2.item()]: row.eff_out_2.item(),
-                    busd[row.bus_out_3.item()]: row.eff_out_3.item(),
                 },
             )
         es.add(pyrolysis)
+
+        # In order to simulate temperature variations, the following 
+        # component can be optionally used to convert some additional
+        # biochar to syngas, according to the input data parameters
+        # out_1_max_decrease and out_2_corresponding_increase.
+        
+        out_1_max_diff = row.eff_out_1.item() - row.eff_out_1_mod.item()
+        if out_1_max_diff != 0: 
+            if out_1_max_diff > 0:
+                pyrolysis_t_variator_params = {
+                    "inputs": {busd[row.bus_out_1.item()]: solph.Flow()},
+                    "outputs": {busd[row.bus_out_2.item()]: solph.Flow()},
+                }
+            elif out_1_max_diff < 0:
+                pyrolysis_t_variator_params = {
+                    "inputs": {busd[row.bus_out_2.item()]: solph.Flow()},
+                    "outputs": {busd[row.bus_out_1.item()]: solph.Flow()},
+                }
+
+            pyrolysis_t_variator = solph.components.Converter(
+                label="pyrolysis_t_variator",
+                inputs = pyrolysis_t_variator_params["inputs"],
+                outputs = pyrolysis_t_variator_params["outputs"],
+                conversion_factors={
+                    busd[row.bus_out_1.item()]: abs(row.eff_out_1.item() - row.eff_out_1_mod.item()),
+                    busd[row.bus_out_2.item()]: abs(row.eff_out_2.item() - row.eff_out_2_mod.item()),
+                },
+            )
+            es.add(pyrolysis_t_variator)
+            print("Added pyrolysis_t_variator to the energy system to simulate temperature variations.")
+
+        if out_1_max_diff == 0:
+                pass
+
+        # generates certificates based on the biochar after pyrolysis_t_variator
+        certificate_generator = solph.components.Converter(
+            label="certificate_generator",
+            inputs={busd[row.bus_out_1.item()]: solph.Flow()},
+            outputs={
+                busd[row.bus_out_3.item()]: solph.Flow(),
+                busd[row.bus_out_4.item()]: solph.Flow(),
+            },
+            conversion_factors={
+                busd[row.bus_out_4.item()]: row.eff_out_3.item() / row.eff_out_1.item(),
+            },
+        )
+        es.add(certificate_generator)
+        
 
     if "heat_exchanger" in components:
         row = converters.loc[converters.label == "heat_exchanger"]
@@ -727,22 +772,20 @@ def create_energysystem(
             bus_out_2 = busd[row.bus_out_2.item()]
             eff_out_1 = row.eff_out_1.item()
 
-            def tradeoff_bounds_lower(om, t):
-                out1 = om.flow[pyrolysis_component, bus_out_1, t]
-                out2 = om.flow[pyrolysis_component, bus_out_2, t]
-                min_ratio = (eff_out_1 + eff_out_1 * row.out_1_max_decrease.item()) / (
-                    row.eff_out_2.item()
-                    + row.eff_out_2.item() * row.out_2_corresponding_increase.item()
-                )
-                # Only enforce when biochar is active
-                return out1 >= min_ratio * out2
+            out_1_max_diff = row.eff_out_1.item() - row.eff_out_1_mod.item()
+            
+            if out_1_max_diff != 0:
+                def tradeoff_bounds(om, t):                    
+                    if out_1_max_diff > 0:
+                        produced_out_1 = om.flow[pyrolysis_component, bus_out_1, t]
+                        converted_out_1 = om.flow[bus_out_1, pyrolysis_t_variator, t]
+                        return converted_out_1 <= (row.eff_out_1.item() - row.eff_out_1_mod.item()) * produced_out_1 / row.eff_out_1.item()
+                    elif out_1_max_diff < 0:
+                        produced_out_2 = om.flow[pyrolysis_component, bus_out_2, t]
+                        converted_out_2 = om.flow[bus_out_2, pyrolysis_t_variator, t]
+                        return converted_out_2 <= (row.eff_out_2.item() - row.eff_out_2_mod.item()) * produced_out_2 / row.eff_out_2.item()
 
-            def tradeoff_bounds_upper(om, t):
-                out1 = om.flow[pyrolysis_component, bus_out_1, t]
-                out2 = om.flow[pyrolysis_component, bus_out_2, t]
-                max_ratio = eff_out_1 / row.eff_out_2.item()
-                return out1 <= max_ratio * out2
-
+            
             def ramp_rule(om, t):
                 """
                 This constraint ensures that the ramping of the pyrolysis unit is limited according
@@ -775,12 +818,10 @@ def create_energysystem(
                         status_t - status_prev
                     )
 
-            om.tradeoff_lower_constraint = Constraint(
-                om.TIMESTEPS, rule=tradeoff_bounds_lower
-            )
-            om.tradeoff_upper_constraint = Constraint(
-                om.TIMESTEPS, rule=tradeoff_bounds_upper
-            )
+            if out_1_max_diff != 0:
+                om.tradeoff_constraint = Constraint(
+                    om.TIMESTEPS, rule=tradeoff_bounds
+                )
             om.custom_ramp = Constraint(om.TIMESTEPS, rule=ramp_rule)
 
     # Add active-flow-count-limit to avoid the use of storage to waste energy
