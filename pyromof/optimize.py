@@ -48,7 +48,6 @@ def extract_components_and_buses_from_input_data(
                 "bus_out_1",
                 "bus_out_2",
                 "bus_out_3",
-                "bus_out_4",
             ]
         ]
         .stack()
@@ -515,20 +514,24 @@ def create_energysystem(
         if out_1_max_diff == 0:
                 pass
 
-        # generates certificates based on the biochar after pyrolysis_t_variator
+    if "certificate_generator" in components:
+        # Creates CO2 certificates for the biochar that remains after the pyrolysis_t_variator.
+        # eff_out_2 is the amount of CO2 certificates per amount of biochar.
+        row = converters.loc[converters.label == "certificate_generator"]
         certificate_generator = solph.components.Converter(
             label="certificate_generator",
-            inputs={busd[row.bus_out_1.item()]: solph.Flow()},
+            inputs={busd[row.bus_in_1.item()]: solph.Flow()},
             outputs={
-                busd[row.bus_out_3.item()]: solph.Flow(),
-                busd[row.bus_out_4.item()]: solph.Flow(),
+                busd[row.bus_out_1.item()]: solph.Flow(),
+                busd[row.bus_out_2.item()]: solph.Flow(),
             },
             conversion_factors={
-                busd[row.bus_out_4.item()]: row.eff_out_3.item() / row.eff_out_1.item(),
+                busd[row.bus_in_1.item()]: row.eff_in_1.item(),
+                busd[row.bus_out_1.item()]: row.eff_out_1.item(),
+                busd[row.bus_out_2.item()]: row.eff_out_2.item(),
             },
         )
         es.add(certificate_generator)
-        
 
     if "heat_exchanger" in components:
         row = converters.loc[converters.label == "heat_exchanger"]
