@@ -3,7 +3,7 @@ Reduces the capex of storage technologies in the input data based on the activat
 The function is called in implement_policies.py
 """
 
-from pyromof.preprocessing_functions.define_input_data_functions import read_raw_data
+from pyromof.preprocessing_functions.preprocess import read_raw_data
 
 
 def implement_storage_subsidies(data, active_policies):

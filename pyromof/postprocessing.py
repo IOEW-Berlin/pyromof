@@ -14,7 +14,7 @@ from pyromof.paths import (
     scenario_results_path,
 )
 from pyromof.postprocessing_functions.log_policies import log_postprocessed_policies
-from pyromof.preprocessing_functions.define_input_data_functions import (
+from pyromof.preprocessing_functions.preprocess import (
     filter_input_data_by_scenario,
     read_raw_data,
 )

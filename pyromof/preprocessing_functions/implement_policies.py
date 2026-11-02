@@ -1,18 +1,18 @@
 """
 Adjusts the input data based on the activated policies.
-The function is called in define_input_data_functions.py
+The function is called in preprocess.py
 """
 
 from pathlib import Path
 
 import pandas as pd
 
-from pyromof.preprocessing_functions.define_input_data_functions import (
-    read_raw_data,
-    retrieve_scenario_from_input_data,
-)
 from pyromof.preprocessing_functions.define_storage_subsidies import (
     implement_storage_subsidies,
+)
+from pyromof.preprocessing_functions.preprocess import (
+    read_raw_data,
+    retrieve_scenario_from_input_data,
 )
 
 

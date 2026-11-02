@@ -17,10 +17,10 @@ from pyromof.postprocessing_functions.opex_policies import (
     postprocess_feed_in_tariff,
     postprocess_sliding_premium,
 )
-from pyromof.preprocessing_functions.define_input_data_functions import preprocess
 from pyromof.preprocessing_functions.implement_policies import (
     check_policy_choice_compatibility,
 )
+from pyromof.preprocessing_functions.preprocess import preprocess
 
 
 def log_postprocessed_policies(data, scenario):

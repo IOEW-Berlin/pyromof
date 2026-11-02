@@ -8,7 +8,7 @@ from pyromof import optimize, postprocessing
 from pyromof.paths import (
     scenario_results_path,
 )
-from pyromof.preprocessing_functions.define_input_data_functions import (
+from pyromof.preprocessing_functions.preprocess import (
     calculate_ep_costs_for_all_components,
     preprocess,
 )
