@@ -14,6 +14,7 @@ from pyromof.paths import (
     scenario_results_path,
 )
 from pyromof.policies import postprocess_sliding_premium
+from pyromof.policies.implement_policies import get_activated_policies
 from pyromof.preprocessing_functions import preprocessing_input_data
 
 
@@ -404,7 +405,8 @@ def postprocess(dumping_space: Path | None = None, results: Path | None = None):
         df.to_csv(os.path.join(results, f"{key}.csv"), sep=";")
     print("The postprocessing is finished and the results have been saved.")
 
-    postprocess_sliding_premium.main(scenario)
+    if "Sliding premium" in get_activated_policies(input_data["policies"]):
+        postprocess_sliding_premium.main(scenario)
 
     return result_dfs
 
