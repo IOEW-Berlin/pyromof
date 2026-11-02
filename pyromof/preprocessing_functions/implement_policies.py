@@ -228,23 +228,23 @@ def check_policy_choice_compatibility(activated_policies, converters):
         )
 
     if (
-        "high load time for chp" in activated_policies
+        "high load time" in activated_policies
         and "flexibility bonus" not in activated_policies
     ):
         print(
-            "Warning: High load time for chp is activated without "
+            "Warning: High load time for chp/orc is activated without "
             "Flexibility bonus. Please check whether this is intended. "
             "Usually, the high load time is a restriction for the Flexibility bonus."
         )
 
-    chp_row = converters.loc[converters["label"] == "chp"]
+    generator_row = converters.loc[converters["label"].isin(["chp", "orc"])]
     if (
-        "high load time for chp" in activated_policies
-        and not chp_row.empty
-        and chp_row["investment"].item() is True
+        "high load time" in activated_policies
+        and not generator_row.empty
+        and generator_row["investment"].item() is True
     ):
         print(
-            "Warning: High load time for chp is activated, in chp investment mode. "
+            "Warning: High load time for chp/orc is activated, in chp/orc investment mode. "
             "The instrument does only effect the optimization in dispatch mode."
         )
     else:

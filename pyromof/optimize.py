@@ -844,15 +844,16 @@ def create_energysystem(
             om.tradeoff_upper_constraint = Constraint(om.TIMESTEPS, rule=tradeoff_bounds_upper)
             om.custom_ramp = Constraint(om.TIMESTEPS, rule=ramp_rule)
 
-    if "high load time for chp" in active_policies:
-        chp_row = converters.loc[converters.label == "chp"]
+    if "high load time" in active_policies:
+        generator_row = converters.loc[converters.label.isin(["chp", "orc"])]
+        generator = es.groups[generator_row.label.item()]
 
-        if chp_row.investment.item() is False:
-            bus_out = busd[chp_row.bus_out_1.item()]
-            capacity = chp_row.nominal_capacity.item()
+        if generator_row.investment.item() is False:
+            bus_out = busd[generator_row.bus_out_1.item()]
+            capacity = generator_row.nominal_capacity.item()
 
             policy_row = data["policies"].loc[
-                data["policies"]["policy"] == "high load time for chp"
+                data["policies"]["policy"] == "high load time"
             ]
             min_load = float(policy_row["value 1"].values[0]) / 100
             min_load_time_percentage = float(policy_row["value 2"].values[0])
@@ -861,7 +862,7 @@ def create_energysystem(
             om.HIGH_LOAD_STATUS = Var(om.TIMESTEPS, within=Binary)
 
             def high_load_status_rule(om, t):
-                return om.flow[chp, bus_out, t] >= min_load * capacity * om.HIGH_LOAD_STATUS[t]
+                return om.flow[generator, bus_out, t] >= min_load * capacity * om.HIGH_LOAD_STATUS[t]
 
             om.high_load_link = Constraint(om.TIMESTEPS, rule=high_load_status_rule)
 
