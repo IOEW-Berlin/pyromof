@@ -196,10 +196,12 @@ def validate_input_data_column_types(input_file):
         Checks a single value against the expected data type. Returns None if the value
         is valid, otherwise a short description of the problem.
         """
+        # bool is a subclass of int in Python, so it has to be excluded explicitly
+        is_number = isinstance(value, (int, float)) and not isinstance(value, bool)
         if dtype in ("str", "str|list[str]"):
             valid = isinstance(value, str)
         elif dtype == "numeric":
-            valid = isinstance(value, (int, float))
+            valid = is_number
         elif dtype == "bool":
             valid = isinstance(value, bool)
         elif dtype == "datetime":
@@ -213,7 +215,7 @@ def validate_input_data_column_types(input_file):
                 if missing:
                     return f"profile {', '.join(missing)} not found in the sheet 'profiles'"
                 return None
-            valid = isinstance(value, (int, float))
+            valid = is_number
         else:
             raise ValueError(f"Unknown data type '{dtype}' in validate_input_data_column_types")
         if valid:
