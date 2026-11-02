@@ -163,17 +163,17 @@ def create_energysystem(
         row = sinks.loc[sinks.label == "electricity_grid", :]
         subsidy_specs = {
             "nominal_capacity": row.nominal_capacity.item(),
-            "variable_costs": data["profiles"]["profile_electricity_premium"],
+            "variable_costs": data["profiles"]["profile_electricity_grid_subsidy"],
         }
 
         if "limitation of subsidized operation time" in active_policies:
             subsidy_specs["nonconvex"] = solph.NonConvex()
 
-        electricity_premium = solph.components.Sink(
+        electricity_grid_subsidy = solph.components.Sink(
             label="electricity_grid_subsidy",
             inputs={busd[row.bus_in.item()]: solph.Flow(**subsidy_specs)},
         )
-        es.add(electricity_premium)
+        es.add(electricity_grid_subsidy)
 
     if "heat_demand_mt" in components:
         row = sinks.loc[sinks.label == "heat_demand_mt", :]
@@ -732,7 +732,7 @@ def create_energysystem(
         # The subsidy sink only exists if sliding premium or feed in tariff is active
         export_components = [(bus_elec, electricity_grid)]
         if "sliding premium" in active_policies or "feed in tariff" in active_policies:
-            export_components.append((bus_elec, electricity_premium))
+            export_components.append((bus_elec, electricity_grid_subsidy))
 
         solph.constraints.shared_limit(
             om,
@@ -757,7 +757,8 @@ def create_energysystem(
 
             def full_load_hours_constraint(om):
                 subsidized_electricity = sum(
-                    om.flow[busd[row.bus_in.item()], electricity_premium, t] for t in om.TIMESTEPS
+                    om.flow[busd[row.bus_in.item()], electricity_grid_subsidy, t]
+                    for t in om.TIMESTEPS
                 )
 
                 if generator_row.investment.item() is True:
@@ -776,7 +777,9 @@ def create_energysystem(
 
             def operation_time_constraint(om):
                 operation_time = sum(
-                    om.NonConvexFlowBlock.status[busd[row.bus_in.item()], electricity_premium, t]
+                    om.NonConvexFlowBlock.status[
+                        busd[row.bus_in.item()], electricity_grid_subsidy, t
+                    ]
                     for t in om.TIMESTEPS
                 )
                 return operation_time <= operation_time_limit

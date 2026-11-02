@@ -50,7 +50,7 @@ def feed_in_tariff_policy(data) -> dict:
         * data["policies"].loc[data["policies"]["policy"] == "feed in tariff", "value 1"].values[0]
     )
 
-    data["profiles"]["profile_electricity_premium"] = feed_in_premium
+    data["profiles"]["profile_electricity_grid_subsidy"] = feed_in_premium
 
     return data
 
@@ -93,7 +93,7 @@ def sliding_premium_policy(data) -> tuple[pd.DataFrame, pd.DataFrame]:
 
     feed_in_revenue, _, _ = feed_in_payment_sliding_premium(data)
 
-    data["profiles"]["profile_electricity_premium"] = feed_in_revenue
+    data["profiles"]["profile_electricity_grid_subsidy"] = feed_in_revenue
 
     return data["sinks"], data["profiles"]
 
