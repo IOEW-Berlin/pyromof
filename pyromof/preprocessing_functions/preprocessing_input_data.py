@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pandas as pd
 from oemof.tools import economics
 from typeguard import typechecked
@@ -201,7 +203,10 @@ def validate_input_data_column_types(input_file):
         elif dtype == "bool":
             valid = isinstance(value, bool)
         elif dtype == "datetime":
-            valid = not pd.isna(pd.to_datetime(value, errors="coerce"))
+            valid = isinstance(value, datetime) or (
+                isinstance(value, str)
+                and not pd.isna(pd.to_datetime(value, format="%Y-%m-%d %H:%M", errors="coerce"))
+            )
         elif dtype == "numeric|str":
             if isinstance(value, str):
                 missing = [p.strip() for p in value.split(",") if p.strip() not in profile_names]
