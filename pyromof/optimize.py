@@ -414,6 +414,20 @@ def create_energysystem(
 
     if "pyrolysis" in components:
         row = converters.loc[converters.label == "pyrolysis"]
+        # Empty eff_out_1_mod and eff_out_2_mod deactivate the pyrolysis_t_variator
+        mod_columns = ["eff_out_1_mod", "eff_out_2_mod"]
+        empty_mods = [col for col in mod_columns if pd.isna(row[col].item())]
+        if len(empty_mods) == 1:
+            raise ValueError(
+                f"The pyrolysis has no value in the column {empty_mods[0]} of the sheet "
+                "'converter'. Enter values in both eff_out_1_mod and eff_out_2_mod or leave "
+                "both cells empty to deactivate the pyrolysis_t_variator."
+            )
+        if len(empty_mods) == 2:
+            converters.loc[converters.label == "pyrolysis", mod_columns] = row[
+                ["eff_out_1", "eff_out_2"]
+            ].values
+            row = converters.loc[converters.label == "pyrolysis"]
         if row.investment.item() is True:
             epc = epcs["pyrolysis"]
             pyrolysis = solph.components.Converter(
