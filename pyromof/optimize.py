@@ -767,28 +767,30 @@ def create_energysystem(
     if "pyrolysis" in components:
         row = converters.loc[converters.label == "pyrolysis"]
 
+        pyrolysis_component = pyrolysis
+        bus_out_1 = busd[row.bus_out_1.item()]
+        bus_out_2 = busd[row.bus_out_2.item()]
+        eff_out_1 = row.eff_out_1.item()
+
+        out_1_max_diff = row.eff_out_1.item() - row.eff_out_1_mod.item()
+        
+        if out_1_max_diff != 0:
+            def tradeoff_bounds(om, t):                    
+                if out_1_max_diff > 0:
+                    produced_out_1 = om.flow[pyrolysis_component, bus_out_1, t]
+                    converted_out_1 = om.flow[bus_out_1, pyrolysis_t_variator, t]
+                    return converted_out_1 <= abs(row.eff_out_1.item() - row.eff_out_1_mod.item()) * produced_out_1 / row.eff_out_1.item()
+                elif out_1_max_diff < 0:
+                    produced_out_2 = om.flow[pyrolysis_component, bus_out_2, t]
+                    converted_out_2 = om.flow[bus_out_2, pyrolysis_t_variator, t]
+                    return converted_out_2 <= abs(row.eff_out_2.item() - row.eff_out_2_mod.item()) * produced_out_2 / row.eff_out_2.item()
+            om.tradeoff_constraint = Constraint(
+                om.TIMESTEPS, rule=tradeoff_bounds
+            )
+
         if row.investment.item() is False:
             print("Creating costum constraints for pyrolysis")
 
-            pyrolysis_component = pyrolysis
-            bus_out_1 = busd[row.bus_out_1.item()]
-            bus_out_2 = busd[row.bus_out_2.item()]
-            eff_out_1 = row.eff_out_1.item()
-
-            out_1_max_diff = row.eff_out_1.item() - row.eff_out_1_mod.item()
-            
-            if out_1_max_diff != 0:
-                def tradeoff_bounds(om, t):                    
-                    if out_1_max_diff > 0:
-                        produced_out_1 = om.flow[pyrolysis_component, bus_out_1, t]
-                        converted_out_1 = om.flow[bus_out_1, pyrolysis_t_variator, t]
-                        return converted_out_1 <= (row.eff_out_1.item() - row.eff_out_1_mod.item()) * produced_out_1 / row.eff_out_1.item()
-                    elif out_1_max_diff < 0:
-                        produced_out_2 = om.flow[pyrolysis_component, bus_out_2, t]
-                        converted_out_2 = om.flow[bus_out_2, pyrolysis_t_variator, t]
-                        return converted_out_2 <= (row.eff_out_2.item() - row.eff_out_2_mod.item()) * produced_out_2 / row.eff_out_2.item()
-
-            
             def ramp_rule(om, t):
                 """
                 This constraint ensures that the ramping of the pyrolysis unit is limited according
@@ -821,10 +823,6 @@ def create_energysystem(
                         status_t - status_prev
                     )
 
-            if out_1_max_diff != 0:
-                om.tradeoff_constraint = Constraint(
-                    om.TIMESTEPS, rule=tradeoff_bounds
-                )
             om.custom_ramp = Constraint(om.TIMESTEPS, rule=ramp_rule)
 
     # Add active-flow-count-limit to avoid the use of storage to waste energy
