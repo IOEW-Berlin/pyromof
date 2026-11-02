@@ -7,9 +7,6 @@ from pathlib import Path
 
 import pandas as pd
 
-from pyromof.preprocessing_functions.define_storage_subsidies import (
-    implement_storage_subsidies,
-)
 from pyromof.preprocessing_functions.preprocess import (
     read_raw_data,
     retrieve_scenario_from_input_data,
@@ -129,6 +126,48 @@ def capex_share_investment_subsidy_policy(
     ] * (1 - (1 / 100 * percentage_subsidy))
 
     return converters
+
+
+def implement_storage_subsidies(data, active_policies):
+    """
+    Reduces the capex of storage technologies in the input data based on the activated policies.
+    """
+
+    subsidy_configs = {
+        "lump_sum": {
+            "electricity_storage": "subsidy for electricity storage: lump sum",
+            "heat_storage": "subsidy for heat storage: lump sum",
+            "h2_storage": "subsidy for hydrogen storage: lump sum",
+            "syngas_storage": "subsidy for syngas storage: lump sum",
+        },
+        "percentage": {
+            "electricity_storage": "subsidy for electricity storage: capex share",
+            "heat_storage": "subsidy for heat storage: capex share",
+            "h2_storage": "subsidy for hydrogen storage: capex share",
+            "syngas_storage": "subsidy for syngas storage: capex share",
+        },
+    }
+
+    for storage_label, policy_name in subsidy_configs["lump_sum"].items():
+        if policy_name not in active_policies:
+            continue
+
+        subsidy = active_policies[policy_name]
+
+        mask = data["storage"]["label"] == storage_label
+        data["storage"].loc[mask, "capex"] -= subsidy
+
+    for storage_label, policy_name in subsidy_configs["percentage"].items():
+        if policy_name not in active_policies:
+            continue
+
+        percentage = active_policies[policy_name]
+        subsidy_factor = 1 - (percentage / 100)
+
+        storage_subsidy = data["storage"]["label"] == storage_label
+        data["storage"].loc[storage_subsidy, "capex"] *= subsidy_factor
+
+    return data["storage"]
 
 
 def check_policy_choice_compatibility(activated_policies, converters):
