@@ -156,9 +156,9 @@ def create_energysystem(
         )
         es.add(electricity_grid)
 
-    # Add a second electricity sink for subsidized remuneration if a policy is activated.
-    # The optimizer splits between market remuneration and subsidized remuneration.
-    # Needed for limitation of subsidized operation time or full load hours.
+    # Add a second electricity sink for subsidized remuneration if a such a policy is activated.
+    # The sink is split into market remuneration and subsidized remuneration.
+    # This is needed for the limitation of subsidized operation time or full load hours.
     if "sliding premium" in active_policies or "feed in tariff" in active_policies:
         row = sinks.loc[sinks.label == "electricity_grid", :]
         subsidy_specs = {
