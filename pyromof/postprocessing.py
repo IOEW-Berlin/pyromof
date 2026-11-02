@@ -13,7 +13,7 @@ from pyromof.paths import (
     scenario_path,
     scenario_results_path,
 )
-from pyromof.postprocessing_functions.log_policies import log_postprocessed_policies
+from pyromof.postprocessing_functions.postprocess_policies import log_postprocessed_policies
 from pyromof.preprocessing_functions.preprocess import (
     filter_input_data_by_scenario,
     read_raw_data,
