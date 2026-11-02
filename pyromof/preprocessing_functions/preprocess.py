@@ -110,10 +110,14 @@ def preprocess(relative_file_path="input_data.xlsx"):
 
     data = read_raw_data(relative_file_path)
     time = define_time_period(data["general"])
-    data["profiles"] = slice_time_period_from_profiles(data["profiles"], time)
+    # The profiles are sliced after the policies, as the sliding premium needs full months
+    # for the calculation of the monthly average electricity price.
+    data["profiles"] = data["profiles"].dropna(subset=["timeindex"]).set_index("timeindex")
+    data["profiles"].index = pd.to_datetime(data["profiles"].index)
     scenario = retrieve_scenario_from_input_data(data["general"])
     data = filter_input_data_by_scenario(data, scenario)
     data = implement_policies(data, scenario)
+    data["profiles"] = slice_time_period_from_profiles(data["profiles"].reset_index(), time)
     epcs = calculate_ep_costs_for_all_components(data, time)
     return data, time, scenario, epcs
 

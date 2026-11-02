@@ -13,7 +13,8 @@ from pyromof.preprocessing_functions.implement_policies import (
     receive_and_refine_electricity_price_data,
 )
 from pyromof.preprocessing_functions.preprocess import (
-    preprocess,
+    filter_input_data_by_scenario,
+    read_raw_data,
     retrieve_scenario_from_input_data,
 )
 
@@ -353,5 +354,9 @@ def log_postprocessed_policies(data, scenario):
 
 
 if __name__ == "__main__":
-    data, time, scenario, epcs = preprocess("input_data.xlsx")
+    data = read_raw_data("input_data.xlsx")
+    data["profiles"] = data["profiles"].set_index("timeindex")
+    data["profiles"].index = pd.to_datetime(data["profiles"].index)
+    scenario = retrieve_scenario_from_input_data(data["general"])
+    data = filter_input_data_by_scenario(data, scenario)
     log_postprocessed_policies(data, scenario)
