@@ -256,13 +256,13 @@ def log_postprocessed_policies(data, scenario):
             "function": capex_share_pyrolysis_subsidy,
             "type": "capex",
             "subsidized_investment": "pyrolysis",
-            "scalar_objective": "pyrolysis to b_biochar_pre_shift",
+            "scalar_objective": "pyrolysis to b_biochar_raw",
         },
         "subsidy for pyrolysis investment costs: lump sum": {
             "function": lump_sum_pyrolysis_subsidy,
             "type": "capex",
             "subsidized_investment": "pyrolysis",
-            "scalar_objective": "pyrolysis to b_biochar_pre_shift",
+            "scalar_objective": "pyrolysis to b_biochar_raw",
         },
         "subsidy for electricity storage: lump sum": {
             "function": lump_sum_storage_subsidy,
