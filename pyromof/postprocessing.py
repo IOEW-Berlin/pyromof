@@ -321,6 +321,8 @@ def postprocess(dumping_space: Path | None = None, results: Path | None = None):
         .item()
     )
 
+    input_data = preprocessing_input_data.filter_input_data_by_scenario(input_data, scenario)
+
     if dumping_space is None:
         dumping_space = scenario_dumping_space_path(scenario)
     if results is None:
