@@ -3,8 +3,9 @@ import os
 import pandas as pd
 import plotly.graph_objects as go
 
-from pyromof import helpers, measure_flexibility
+from pyromof import helpers
 from pyromof.paths import RESULTS_DIR, scenario_results_path
+from pyromof.postprocessing_functions import measure_flexibility
 
 
 def merge_scalars_from_scenarios(scenarios, RESULTS):
