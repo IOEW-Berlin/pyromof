@@ -810,9 +810,13 @@ def create_energysystem(
             "electricity_export_limit",
             components=export_components,
             weights=[1] * len(export_components),
-            lower_limit=nominal_capacity * min_value,
-            upper_limit=nominal_capacity * max_value,
         )
+        # The limits are set per timestep, as min and max can be profiles
+        min_sequence = solph.sequence(min_value)
+        max_sequence = solph.sequence(max_value)
+        for t in om.TIMESTEPS:
+            om.electricity_export_limit[t].setlb(nominal_capacity * min_sequence[t])
+            om.electricity_export_limit[t].setub(nominal_capacity * max_sequence[t])
 
         if "limitation of subsidized full load hours" in active_policies:
             full_load_hours_limit_percentage = float(
