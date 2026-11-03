@@ -3,6 +3,7 @@ Adjusts the input data based on the activated policies.
 The function is called in preprocess.py
 """
 
+from numbers import Real
 from pathlib import Path
 
 import pandas as pd
@@ -170,6 +171,39 @@ def implement_storage_subsidies(data, active_policies):
     return data["storage"]
 
 
+def check_policy_values(policies):
+    """
+    Checks whether the values used by the activated policies are numbers.
+    All missing or invalid values are collected and reported in one ValueError.
+    """
+    # value 2 is only used by these policies, all other policies only use value 1
+    policies_with_value_2 = ["sliding premium", "flexibility bonus", "high load time"]
+
+    errors = []
+    for _, row in policies.loc[policies["activate"] == "x"].iterrows():
+        value_numbers = [1, 2] if row["policy"] in policies_with_value_2 else [1]
+        for number in value_numbers:
+            value = row[f"value {number}"]
+            # bool is a subclass of int in Python, so it has to be excluded explicitly
+            if isinstance(value, Real) and not isinstance(value, bool) and not pd.isna(value):
+                continue
+            problem = "empty" if pd.isna(value) else f"{value!r}, but has to be a number"
+            details = [
+                str(row[column]).strip()
+                for column in (f"attribute {number}", f"unit {number}")
+                if column in row and not pd.isna(row[column])
+            ]
+            details = f" ({'; '.join(details)})" if details else ""
+            errors.append(f"  - '{row['policy']}': value {number}{details} is {problem}.")
+
+    if errors:
+        raise ValueError(
+            "The following activated policies have missing or invalid values:\n"
+            + "\n".join(errors)
+            + "\nPlease enter a number or deactivate the policy in the policies sheet."
+        )
+
+
 def check_policy_choice_compatibility(activated_policies, converters):
 
     if (
@@ -284,6 +318,7 @@ def implement_policies(data, scenario) -> None:
         .to_dict()
     )
 
+    check_policy_values(data["policies"])
     check_policy_choice_compatibility(active_policies, data["converters"])
 
     # drop column "scenario" from all tables where it exists
