@@ -209,7 +209,7 @@ def shownetwork(network):
         ]
     )
 
-    textcolor = "white"  # (change textcolor depending on preferance)
+    textcolor = "white"  # (change textcolor depending on preference)
 
     # implement routine to make results clickable
     @app.callback(Output("node-data", "children"), Input("cytoscape", "tapNodeData"))

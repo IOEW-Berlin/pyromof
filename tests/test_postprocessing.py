@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from pyromof import postprocessing
+from pyromof.postprocessing_functions import postprocessing
 
 TEST_PATH = Path(__file__).parent
 ROOT_PATH = TEST_PATH.parent

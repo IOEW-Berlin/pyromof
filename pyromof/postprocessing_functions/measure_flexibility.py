@@ -10,6 +10,13 @@ def calculate_electricity_fed_in_at_negative_price_timesteps(sequences, profiles
     This function identifies the timesteps where electricity is fed into the grid
     at a negative price and sums up the amount of electricity fed in at these timesteps.
     """
+    electricity_columns = [
+        "b_electricity to electricity_grid",
+        "b_electricity to electricity_grid_subsidy",
+    ]
+    # The subsidy sink only exists if sliding premium or feed in tariff is active
+    if "b_electricity to electricity_grid_subsidy" not in sequences.columns:
+        electricity_columns.remove("b_electricity to electricity_grid_subsidy")
     # Align indices: keep only timestamps that exist in both dataframes
     common_index = sequences.index.intersection(profiles.index)
     sequences_aligned = sequences.loc[common_index]
@@ -20,19 +27,18 @@ def calculate_electricity_fed_in_at_negative_price_timesteps(sequences, profiles
         profiles_aligned["profile_electricity_remuneration"] > 0
     ].index
 
-    # Sum up the electricity fed into the grid at these timestepsSS
+    # Sum up the electricity fed into the grid at these timesteps
     fed_in_at_negative_price = (
         sequences_aligned.loc[
             negative_price_timesteps,
-            sequences_aligned.columns.str.contains("b_electricity to electricity_grid"),
+            electricity_columns,
         ]
         .sum()
         .sum()
     )
 
     share_of_total_electricity_fed_in = (
-        fed_in_at_negative_price
-        / sequences_aligned["b_electricity to electricity_grid"].sum().sum()
+        fed_in_at_negative_price / sequences_aligned[electricity_columns].sum().sum()
     )
     return fed_in_at_negative_price, share_of_total_electricity_fed_in * 100
 
@@ -76,6 +82,31 @@ def calculate_storage_charging_cycles(scalars, sequences, storage):
     return charging_cycles
 
 
+def calculate_high_load_hours(sequences, scalars, converters, min_load_value=0.85):
+    # The generator is chp or the orc, depending on the scenario
+    generators = [g for g in ["chp", "orc"] if f"{g} to b_electricity" in sequences.columns]
+    if len(generators) != 1:
+        raise ValueError(
+            f"Exactly one generator (chp or orc) is expected in the results, found: {generators}"
+        )
+    generator = generators[0]
+    generator_output = sequences[f"{generator} to b_electricity"]
+
+    if converters.loc[generator, "investment"] is True:
+        capacity = scalars.loc[
+            scalars["variable"].str.contains(f"{generator} to b_electricity")
+            & scalars["type"].str.contains("built capacity"),
+            "value",
+        ].item()
+    else:
+        capacity = converters.loc[generator, "nominal_capacity"]
+
+    high_load_hours = (generator_output >= min_load_value * capacity).sum()
+    high_load_hours_percentage = (high_load_hours / len(generator_output)) * 100
+
+    return high_load_hours_percentage
+
+
 def measure_flexibility(scenarios: list):
     # Create a table with scenarios as column names and the elec fed in at negative price,
     # the share of total electricity fed in at negative price and the pyrolysis full load
@@ -103,20 +134,30 @@ def measure_flexibility(scenarios: list):
             sheet_name="storage",
             index_col=0,
         )
+
+        converters = pd.read_excel(
+            os.path.join(SCENARIO_META_INFO, "input_data.xlsx"),
+            sheet_name="converter",
+            index_col=0,
+        )
+
         fed_in_at_negative_price, share_of_total_electricity_fed_in = (
-            calculate_electricity_fed_in_at_negative_price_timesteps(
-                sequences, profiles
-            )
+            calculate_electricity_fed_in_at_negative_price_timesteps(sequences, profiles)
         )
         pyrolysis_full_load_hours = calculate_pyrolysis_full_load_hours(sequences)
 
         charging_cycles = calculate_storage_charging_cycles(scalars, sequences, storage)
+
+        high_load_hours_percentage = calculate_high_load_hours(sequences, scalars, converters)
 
         results.loc["fed_in_at_negative_price", scenario] = fed_in_at_negative_price
         results.loc["share_of_total_electricity_fed_in", scenario] = (
             share_of_total_electricity_fed_in
         )
         results.loc["pyrolysis_full_load_hours", scenario] = pyrolysis_full_load_hours
+        results.loc[
+            "time_at_85%_load (%); minimum time for biogas in germany is 11,4%", scenario
+        ] = high_load_hours_percentage
 
         # Append charging_cycles to results DataFrame
         for storage_name, cycles in charging_cycles.items():
