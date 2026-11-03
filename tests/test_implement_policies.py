@@ -1,7 +1,5 @@
-import matplotlib
-
-matplotlib.use("Agg")
 import os
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -75,62 +73,53 @@ def receive_test_data(base_path):
     )
 
 
-(
-    base_value_1,
-    lower_threshold,
-    electricity_price_data,
-    sliding_premium_1_template,
-    monthly_average_electricity_price_template,
-    total_revenue_1_template,
-) = receive_test_data("tests/files")
+def test_feed_in_payment_sliding_premium():
+    (
+        base_value_1,
+        lower_threshold,
+        electricity_price_data,
+        sliding_premium_1_template,
+        monthly_average_electricity_price_template,
+        total_revenue_1_template,
+    ) = receive_test_data(Path(__file__).parent / "files")
 
-
-total_revenue_1_test, sliding_premium_1_test, monthly_average_price_1 = (
-    feed_in_payment_sliding_premium(electricity_price_data, base_value_1, lower_threshold)
-)
-
-
-# average monthly electricity price test
-
-monthly_average_electricity_price_test = (
-    monthly_average_price_1.groupby(monthly_average_price_1.index.to_period("M")).first().round(4)
-)
-if np.allclose(
-    monthly_average_electricity_price_test.to_numpy(),
-    monthly_average_electricity_price_template.to_numpy(),
-):
-    print("monthly average price test passed")
-else:
-    print(
-        f"monthly average electricity price test not passed: \
-        monthly average price template:\
-        {monthly_average_electricity_price_template}\
-        monthly average price test: \
-        {monthly_average_electricity_price_test}"
+    data = {
+        "profiles": pd.DataFrame({"profile_electricity_remuneration": electricity_price_data}),
+        "policies": pd.DataFrame(
+            {
+                "policy": ["sliding premium"],
+                "value 1": [-base_value_1],
+                "value 2": [-lower_threshold],
+            }
+        ),
+    }
+    total_revenue_1_test, sliding_premium_1_test, monthly_average_price_1 = (
+        feed_in_payment_sliding_premium(data)
     )
 
+    # average monthly electricity price test
+    monthly_average_electricity_price_test = (
+        monthly_average_price_1.groupby(monthly_average_price_1.index.to_period("M"))
+        .first()
+        .round(4)
+    )
+    assert np.allclose(
+        monthly_average_electricity_price_test.to_numpy(),
+        monthly_average_electricity_price_template.to_numpy(),
+    )
 
-# sliding premium test
+    # sliding premium test
+    sliding_premium_1_test = sliding_premium_1_test.round(4)
+    sliding_premium_1_test = sliding_premium_1_test.reset_index(drop=True)
+    assert np.allclose(
+        sliding_premium_1_template.to_numpy()[:1000], sliding_premium_1_test.to_numpy()[:1000]
+    )
 
-sliding_premium_1_test = sliding_premium_1_test.round(4)
-sliding_premium_1_test = sliding_premium_1_test.reset_index(drop=True)
-
-if np.allclose(
-    sliding_premium_1_template.to_numpy()[:1000], sliding_premium_1_test.to_numpy()[:1000]
-):
-    print("sliding premium test 1 passed!")
-
-else:
-    print("sliding premium test failed!")
-
-# total revenue test
-total_revenue_1_test = total_revenue_1_test.round(4)
-total_revenue_1_test = total_revenue_1_test.reset_index(drop=True)
-
-if np.allclose(
-    total_revenue_1_template.to_numpy()[:1000], total_revenue_1_test.to_numpy()[:1000], atol=1e-4
-):
-    print("total revenue test passed!")
-
-else:
-    print("total revenue test failed!")
+    # total revenue test
+    total_revenue_1_test = total_revenue_1_test.round(4)
+    total_revenue_1_test = total_revenue_1_test.reset_index(drop=True)
+    assert np.allclose(
+        total_revenue_1_template.to_numpy()[:1000],
+        total_revenue_1_test.to_numpy()[:1000],
+        atol=1e-4,
+    )
