@@ -16,12 +16,15 @@ def get_data_csv(scenario: str) -> pd.DataFrame:
     ]
 
     data = pd.read_csv(file_path, sep=separator, parse_dates=parse_dates)
+    # The subsidy sink only exists if sliding premium or feed in tariff is active
+    if "b_electricity to electricity_grid_subsidy" not in data.columns:
+        data["b_electricity to electricity_grid_subsidy"] = 0
     data = data[target_columns].copy()
     data["total_electricity_feed_in"] = (
         data["b_electricity to electricity_grid"]
         + data["b_electricity to electricity_grid_subsidy"]
     )
-    return data[target_columns]
+    return data
 
 
 def sort_values_descending(df: pd.DataFrame, column: str) -> pd.Series:
