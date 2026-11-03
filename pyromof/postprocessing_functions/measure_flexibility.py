@@ -80,19 +80,26 @@ def calculate_storage_charging_cycles(scalars, sequences, storage):
 
 
 def calculate_high_load_hours(sequences, scalars, converters, min_load_value=0.85):
-    chp_output = sequences["chp to b_electricity"]
+    # The generator is chp or the orc, depending on the scenario
+    generators = [g for g in ["chp", "orc"] if f"{g} to b_electricity" in sequences.columns]
+    if len(generators) != 1:
+        raise ValueError(
+            f"Exactly one generator (chp or orc) is expected in the results, found: {generators}"
+        )
+    generator = generators[0]
+    generator_output = sequences[f"{generator} to b_electricity"]
 
-    if converters.loc["chp", "investment"] is True:
+    if converters.loc[generator, "investment"] is True:
         capacity = scalars.loc[
-            scalars["variable"].str.contains("chp")
+            scalars["variable"].str.contains(f"{generator} to b_electricity")
             & scalars["type"].str.contains("built capacity"),
             "value",
         ].item()
     else:
-        capacity = converters.loc["chp", "nominal_capacity"]
+        capacity = converters.loc[generator, "nominal_capacity"]
 
-    high_load_hours = (chp_output >= min_load_value * capacity).sum()
-    high_load_hours_percentage = (high_load_hours / len(chp_output)) * 100
+    high_load_hours = (generator_output >= min_load_value * capacity).sum()
+    high_load_hours_percentage = (high_load_hours / len(generator_output)) * 100
 
     return high_load_hours_percentage
 
