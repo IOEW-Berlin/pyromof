@@ -3,7 +3,7 @@ import matplotlib
 matplotlib.use("Agg")
 import pandas as pd
 
-from pyromof.load_duration_curve import (
+from pyromof.postprocessing_functions.load_duration_curve import (
     get_data_csv,
     plot_load_duration_curves,
     sort_values_descending,
