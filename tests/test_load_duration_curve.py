@@ -3,9 +3,10 @@ import matplotlib
 matplotlib.use("Agg")
 import pandas as pd
 
+from pyromof import paths
 from pyromof.postprocessing_functions.load_duration_curve import (
+    create_plot,
     get_data_csv,
-    plot_load_duration_curves,
     sort_values_descending,
 )
 
@@ -21,13 +22,13 @@ def test_plot_load_duration_curve(tmp_path):
     """Test that plot is saved to file."""
     column = pd.Series([3, 2, 1])
     save_path = tmp_path / "test_plot.png"
-    plot_load_duration_curves(column, "x-title", "y-title", "title", str(save_path))
+    create_plot(column, "x-title", "y-title", "title", str(save_path))
     assert save_path.exists()
 
 
 def test_get_data_csv(tmp_path, monkeypatch):
     """Test get_data_csv with mock data."""
-    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(paths, "RESULTS_DIR", tmp_path / "results")
 
     scenario_dir = tmp_path / "results" / "test_scenario" / "results"
     scenario_dir.mkdir(parents=True)
@@ -42,4 +43,5 @@ def test_get_data_csv(tmp_path, monkeypatch):
     test_data.to_csv(csv_file, sep=";", index=False)
 
     result = get_data_csv("test_scenario")
-    assert result.shape == (3, 2)
+    assert result.shape == (3, 4)
+    assert list(result["total_electricity_feed_in"]) == [1, 2, 3]
