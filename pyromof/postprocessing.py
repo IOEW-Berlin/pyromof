@@ -103,7 +103,7 @@ def gas_char_ratio(df_sequences, df_additional_columns, converters):
     normed_syngas_output = converters.loc[converters["label"] == "pyrolysis", "eff_out_2"].iloc[0]
     normed_ratio = normed_syngas_output / normed_biochar_output
 
-    bio_char_output = df_sequences["pyrolysis to b_biochar"]
+    bio_char_output = df_sequences["pyrolysis to b_biochar_raw"]
     syngas_output = df_sequences["pyrolysis to b_syngas_hot"]
     ratio = bio_char_output.div(syngas_output) * normed_ratio
     ratio = ratio.replace([float("inf"), -float("inf")], pd.NA)
