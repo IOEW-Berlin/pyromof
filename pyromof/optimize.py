@@ -503,13 +503,13 @@ def create_energysystem(
             )
         es.add(pyrolysis)
 
-        # In order to simulate temperature variations, the following 
+        # In order to simulate temperature variations, the following
         # component can be optionally used to convert some additional
         # biochar to syngas, according to the input data parameters
         # out_1_max_decrease and out_2_corresponding_increase.
-        
+
         out_1_max_diff = row.eff_out_1.item() - row.eff_out_1_mod.item()
-        if out_1_max_diff != 0: 
+        if out_1_max_diff != 0:
             if out_1_max_diff > 0:
                 pyrolysis_t_variator_params = {
                     "inputs": {busd[row.bus_out_1.item()]: solph.Flow()},
@@ -523,18 +523,25 @@ def create_energysystem(
 
             pyrolysis_t_variator = solph.components.Converter(
                 label="pyrolysis_t_variator",
-                inputs = pyrolysis_t_variator_params["inputs"],
-                outputs = pyrolysis_t_variator_params["outputs"],
+                inputs=pyrolysis_t_variator_params["inputs"],
+                outputs=pyrolysis_t_variator_params["outputs"],
                 conversion_factors={
-                    busd[row.bus_out_1.item()]: abs(row.eff_out_1.item() - row.eff_out_1_mod.item()),
-                    busd[row.bus_out_2.item()]: abs(row.eff_out_2.item() - row.eff_out_2_mod.item()),
+                    busd[row.bus_out_1.item()]: abs(
+                        row.eff_out_1.item() - row.eff_out_1_mod.item()
+                    ),
+                    busd[row.bus_out_2.item()]: abs(
+                        row.eff_out_2.item() - row.eff_out_2_mod.item()
+                    ),
                 },
             )
             es.add(pyrolysis_t_variator)
-            print("Added pyrolysis_t_variator to the energy system to simulate temperature variations.")
+            print(
+                "Added pyrolysis_t_variator to the energy system "
+                "to simulate temperature variations."
+            )
 
         if out_1_max_diff == 0:
-                pass
+            pass
 
     if "certificate_generator" in components:
         # Creates CO2 certificates for the biochar that remains after the pyrolysis_t_variator.
@@ -854,23 +861,32 @@ def create_energysystem(
         pyrolysis_component = pyrolysis
         bus_out_1 = busd[row.bus_out_1.item()]
         bus_out_2 = busd[row.bus_out_2.item()]
-        eff_out_1 = row.eff_out_1.item()
 
         out_1_max_diff = row.eff_out_1.item() - row.eff_out_1_mod.item()
-        
+
         if out_1_max_diff != 0:
-            def tradeoff_bounds(om, t):                    
+
+            def tradeoff_bounds(om, t):
                 if out_1_max_diff > 0:
                     produced_out_1 = om.flow[pyrolysis_component, bus_out_1, t]
                     converted_out_1 = om.flow[bus_out_1, pyrolysis_t_variator, t]
-                    return converted_out_1 <= abs(row.eff_out_1.item() - row.eff_out_1_mod.item()) * produced_out_1 / row.eff_out_1.item()
+                    return (
+                        converted_out_1
+                        <= abs(row.eff_out_1.item() - row.eff_out_1_mod.item())
+                        * produced_out_1
+                        / row.eff_out_1.item()
+                    )
                 elif out_1_max_diff < 0:
                     produced_out_2 = om.flow[pyrolysis_component, bus_out_2, t]
                     converted_out_2 = om.flow[bus_out_2, pyrolysis_t_variator, t]
-                    return converted_out_2 <= abs(row.eff_out_2.item() - row.eff_out_2_mod.item()) * produced_out_2 / row.eff_out_2.item()
-            om.tradeoff_constraint = Constraint(
-                om.TIMESTEPS, rule=tradeoff_bounds
-            )
+                    return (
+                        converted_out_2
+                        <= abs(row.eff_out_2.item() - row.eff_out_2_mod.item())
+                        * produced_out_2
+                        / row.eff_out_2.item()
+                    )
+
+            om.tradeoff_constraint = Constraint(om.TIMESTEPS, rule=tradeoff_bounds)
 
         if row.investment.item() is False:
             print("Creating custom constraints for pyrolysis")
@@ -915,9 +931,7 @@ def create_energysystem(
             bus_out = busd[generator_row.bus_out_1.item()]
             capacity = generator_row.nominal_capacity.item()
 
-            policy_row = data["policies"].loc[
-                data["policies"]["policy"] == "high load time"
-            ]
+            policy_row = data["policies"].loc[data["policies"]["policy"] == "high load time"]
             min_load = float(policy_row["value 1"].values[0]) / 100
             min_load_time_percentage = float(policy_row["value 2"].values[0])
             min_load_time = min_load_time_percentage / 100 * len(om.TIMESTEPS)
@@ -925,7 +939,9 @@ def create_energysystem(
             om.HIGH_LOAD_STATUS = Var(om.TIMESTEPS, within=Binary)
 
             def high_load_status_rule(om, t):
-                return om.flow[generator, bus_out, t] >= min_load * capacity * om.HIGH_LOAD_STATUS[t]
+                return (
+                    om.flow[generator, bus_out, t] >= min_load * capacity * om.HIGH_LOAD_STATUS[t]
+                )
 
             om.high_load_link = Constraint(om.TIMESTEPS, rule=high_load_status_rule)
 

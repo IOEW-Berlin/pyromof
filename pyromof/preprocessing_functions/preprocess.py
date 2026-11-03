@@ -168,9 +168,7 @@ def validate_input_data_column_types(input_file):
         "datetime": (
             "Enter a date with time in the format YYYY-MM-DD hh:mm, e.g. 2025-01-01 00:00."
         ),
-        "numeric|str": (
-            "Enter a number or the name of a column in the sheet 'profiles'. "
-        ),
+        "numeric|str": ("Enter a number or the name of a column in the sheet 'profiles'. "),
         "str|list[str]": "Enter text or a comma-separated list of texts, e.g. PyGas_CHP, Py_ORC.",
     }
 

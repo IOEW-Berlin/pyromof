@@ -207,9 +207,7 @@ def check_policy_choice_compatibility(activated_policies, converters):
     if (
         "limitation of subsidized full load hours" in activated_policies
         or "limitation of subsidized operation time" in activated_policies
-    ) and not (
-        "sliding premium" in activated_policies or "feed in tariff" in activated_policies
-    ):
+    ) and not ("sliding premium" in activated_policies or "feed in tariff" in activated_policies):
         raise ValueError(
             "The limitation of subsidized full load hours or operation time only works if "
             "sliding premium or feed in tariff is active. \n"
@@ -227,10 +225,7 @@ def check_policy_choice_compatibility(activated_policies, converters):
             "In Germany, these instruments are used in combination."
         )
 
-    if (
-        "high load time" in activated_policies
-        and "flexibility bonus" not in activated_policies
-    ):
+    if "high load time" in activated_policies and "flexibility bonus" not in activated_policies:
         print(
             "Warning: High load time for chp/orc is activated without "
             "Flexibility bonus. Please check whether this is intended. "
