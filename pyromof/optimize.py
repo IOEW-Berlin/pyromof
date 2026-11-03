@@ -9,8 +9,9 @@ from oemof.network.graph import create_nx_graph
 from pyomo.environ import Binary, Constraint, Set, Var
 from typeguard import typechecked
 
-from pyromof import helpers, postprocessing
+from pyromof import helpers
 from pyromof.paths import ROOT_PATH
+from pyromof.postprocessing_functions import postprocessing
 from pyromof.preprocessing_functions.preprocess import preprocess
 
 

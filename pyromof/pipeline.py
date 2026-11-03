@@ -3,9 +3,13 @@ from pathlib import Path
 from pyromof import (
     analyse_sensitivity,
     optimize,
+)
+from pyromof.postprocessing_functions import (
+    compare_scenarios,
+    load_duration_curve,
+    plotting,
     postprocessing,
 )
-from pyromof.postprocessing_functions import compare_scenarios, load_duration_curve, plotting
 from pyromof.preprocessing_functions import load_demand_profiles
 
 pyromof = Path(__file__).parent

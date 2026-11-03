@@ -4,10 +4,11 @@ from functools import reduce
 
 import pandas as pd
 
-from pyromof import optimize, postprocessing
+from pyromof import optimize
 from pyromof.paths import (
     scenario_results_path,
 )
+from pyromof.postprocessing_functions import postprocessing
 from pyromof.preprocessing_functions.preprocess import (
     calculate_ep_costs_for_all_components,
     preprocess,
