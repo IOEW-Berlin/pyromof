@@ -14,6 +14,9 @@ def calculate_electricity_fed_in_at_negative_price_timesteps(sequences, profiles
         "b_electricity to electricity_grid",
         "b_electricity to electricity_grid_subsidy",
     ]
+    # The subsidy sink only exists if sliding premium or feed in tariff is active
+    if "b_electricity to electricity_grid_subsidy" not in sequences.columns:
+        electricity_columns.remove("b_electricity to electricity_grid_subsidy")
     # Align indices: keep only timestamps that exist in both dataframes
     common_index = sequences.index.intersection(profiles.index)
     sequences_aligned = sequences.loc[common_index]
