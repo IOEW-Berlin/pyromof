@@ -2,10 +2,10 @@ from pathlib import Path
 
 from pyromof import (
     analyse_sensitivity,
+    compare_scenarios,
     optimize,
 )
 from pyromof.postprocessing_functions import (
-    compare_scenarios,
     load_duration_curve,
     plotting,
     postprocessing,
