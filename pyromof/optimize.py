@@ -598,6 +598,29 @@ def create_energysystem(
             )
         es.add(heat_exchanger)
 
+    # Converts medium temperature heat to low temperature heat for the biomass dryer
+    if "heat_exchanger_mt_lt" in components:
+        row = converters.loc[converters.label == "heat_exchanger_mt_lt"]
+        if row.investment.item() is True:
+            epc = epcs["heat_exchanger_mt_lt"]
+            output_flow = solph.Flow(nominal_capacity=solph.Investment(ep_costs=epc))
+        elif row.investment.item() is False:
+            output_flow = solph.Flow()
+        heat_exchanger_mt_lt = solph.components.Converter(
+            label="heat_exchanger_mt_lt",
+            inputs={
+                busd[row.bus_in_1.item()]: solph.Flow(),
+            },
+            outputs={
+                busd[row.bus_out_1.item()]: output_flow,
+            },
+            conversion_factors={
+                busd[row.bus_in_1.item()]: row.eff_in_1.item(),
+                busd[row.bus_out_1.item()]: row.eff_out_1.item(),
+            },
+        )
+        es.add(heat_exchanger_mt_lt)
+
     if "combustor" in components:
         row = converters.loc[converters.label == "combustor"]
         if row.investment.item() is True:
