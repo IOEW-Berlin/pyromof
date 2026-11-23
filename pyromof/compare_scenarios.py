@@ -3,8 +3,9 @@ import os
 import pandas as pd
 import plotly.graph_objects as go
 
-from pyromof import helpers, measure_flexibility
+from pyromof import helpers
 from pyromof.paths import RESULTS_DIR, scenario_results_path
+from pyromof.postprocessing_functions import measure_flexibility
 
 
 def merge_scalars_from_scenarios(scenarios, RESULTS):
@@ -24,9 +25,7 @@ def merge_scalars_from_scenarios(scenarios, RESULTS):
     dataframes = []
     for scenario in scenarios:
         SCENARIO_RESULTS = scenario_results_path(scenario)
-        scalar_results = pd.read_csv(
-            SCENARIO_RESULTS / "scalar_results.csv", sep=";", index_col=0
-        )
+        scalar_results = pd.read_csv(SCENARIO_RESULTS / "scalar_results.csv", sep=";", index_col=0)
         dataframes.append(rename_columns_for_scenario(scalar_results, scenario))
 
         scalcosts = helpers.prepare_cost_scalars_for_plotting(

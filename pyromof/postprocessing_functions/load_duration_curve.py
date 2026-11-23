@@ -11,11 +11,20 @@ def get_data_csv(scenario: str) -> pd.DataFrame:
     parse_dates = True
     target_columns = [
         "b_electricity to electricity_grid",
+        "b_electricity to electricity_grid_subsidy",
         "b_biomass_dry to pyrolysis",
     ]
 
     data = pd.read_csv(file_path, sep=separator, parse_dates=parse_dates)
-    return data[target_columns]
+    # The subsidy sink only exists if sliding premium or feed in tariff is active
+    if "b_electricity to electricity_grid_subsidy" not in data.columns:
+        data["b_electricity to electricity_grid_subsidy"] = 0
+    data = data[target_columns].copy()
+    data["total_electricity_feed_in"] = (
+        data["b_electricity to electricity_grid"]
+        + data["b_electricity to electricity_grid_subsidy"]
+    )
+    return data
 
 
 def sort_values_descending(df: pd.DataFrame, column: str) -> pd.Series:
@@ -43,7 +52,7 @@ def plot_load_duration_curves(scenario=None):
 
     columns = get_data_csv(scenario)
 
-    descending_power_data = sort_values_descending(columns, "b_electricity to electricity_grid")
+    descending_power_data = sort_values_descending(columns, "total_electricity_feed_in")
     descending_biomass_data = sort_values_descending(columns, "b_biomass_dry to pyrolysis")
 
     create_plot(
