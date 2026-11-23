@@ -563,12 +563,12 @@ def create_energysystem(
         )
         es.add(certificate_generator)
 
-    if "heat_exchanger" in components:
-        row = converters.loc[converters.label == "heat_exchanger"]
+    if "heat_exchanger_ht_mt" in components:
+        row = converters.loc[converters.label == "heat_exchanger_ht_mt"]
         if row.investment.item() is True:
-            epc = epcs["heat_exchanger"]
+            epc = epcs["heat_exchanger_ht_mt"]
             heat_exchanger = solph.components.Converter(
-                label="heat_exchanger",
+                label="heat_exchanger_ht_mt",
                 inputs={
                     busd[row.bus_in_1.item()]: solph.Flow(),
                 },
@@ -584,7 +584,7 @@ def create_energysystem(
             )
         elif row.investment.item() is False:
             heat_exchanger = solph.components.Converter(
-                label="heat_exchanger",
+                label="heat_exchanger_ht_mt",
                 inputs={
                     busd[row.bus_in_1.item()]: solph.Flow(),
                 },
