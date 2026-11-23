@@ -64,9 +64,10 @@ def filter_input_data_by_scenario(
 ):
     dfs = ["sinks", "sources", "converters", "storage"]
     # Filter sheets listed in dfs by scenario and leave the others unchanged
+    # Empty scenario cells are treated as "none" and are not used in any scenario
     data = {
         name: (
-            df[df["scenario"].apply(matches_scenario, args=(scenario_wanted,))]
+            df[df["scenario"].fillna("none").apply(matches_scenario, args=(scenario_wanted,))]
             if name in dfs
             else df
         )
