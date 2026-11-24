@@ -71,3 +71,32 @@ def test_add_sums_to_scalar_results_with_existing_data():
     assert result.iloc[0]["variable"] == "objective"
     assert result.loc[result["variable"] == "cost_1", "value"].values[0] == 30.0
     assert result.loc[result["variable"] == "cost_2", "value"].values[0] == 20.0
+
+
+def test_drop_flows_without_variable_costs(tmp_path):
+    """Test that only flows without variable costs in the model are dropped"""
+    path_varcosts = tmp_path / "variable_costs_from_model.csv"
+    pd.DataFrame(
+        {
+            "b_electricity to electricity_grid": [-0.1, -0.2],
+            "b_co2 to co2_market": [-0.125, -0.125],
+            "b_heat_lt to heat_lt_excess": [0.0, 0.0],
+        }
+    ).to_csv(path_varcosts, sep=";")
+    effective_variable_costs = pd.DataFrame(
+        {
+            "b_electricity to electricity_grid": [-1.0, -2.0],
+            "b_co2 to co2_market": [0.0, 0.0],
+            "b_heat_lt to heat_lt_excess": [0.0, 0.0],
+        }
+    )
+
+    result = postprocessing.drop_flows_without_variable_costs(
+        effective_variable_costs, path_varcosts
+    )
+
+    # b_co2 to co2_market has variable costs and is kept, although its costs sum up to 0
+    assert list(result.columns) == [
+        "b_electricity to electricity_grid",
+        "b_co2 to co2_market",
+    ]

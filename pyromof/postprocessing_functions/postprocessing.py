@@ -38,6 +38,16 @@ def add_sums_to_scalar_results(data, description, scalar_results):
     return scalar_results
 
 
+def drop_flows_without_variable_costs(effective_variable_costs, path_varcosts):
+    """
+    Drops the flows that have no variable costs in the model.
+    Flows with variable costs are kept, even if their costs sum up to 0.
+    """
+    varcosts = pd.read_csv(path_varcosts, sep=";", index_col=0)
+    flows_without_costs = varcosts.columns[(varcosts.fillna(0) == 0).all()]
+    return effective_variable_costs.drop(columns=flows_without_costs)
+
+
 def add_objective_to_scalar_results(results, scalar_results):
     scalar_results = helpers.add_items_to_scalar_results(
         {"objective": results["meta"]["objective"]},
@@ -327,7 +337,10 @@ def postprocess(dumping_space: Path | None = None, results: Path | None = None):
 
     scalar_results = add_sums_to_scalar_results(sequences, "sum of flow", scalar_results)
     scalar_results = add_sums_to_scalar_results(
-        effective_variable_costs,
+        drop_flows_without_variable_costs(
+            effective_variable_costs,
+            os.path.join(dumping_space, "variable_costs_from_model.csv"),
+        ),
         "sum of variable costs [Euros]",
         scalar_results,
     )
