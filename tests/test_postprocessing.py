@@ -100,3 +100,28 @@ def test_drop_flows_without_variable_costs(tmp_path):
         "b_electricity to electricity_grid",
         "b_co2 to co2_market",
     ]
+
+
+def test_merge_duplicate_flows_at_buses():
+    """Test that only the flows of buses with one inflow and one outflow are merged"""
+    sequences = pd.DataFrame(
+        {
+            "biomass to b_biomass": [1.0, 2.0],
+            "b_biomass to biomass_dryer": [1.0, 2.0],
+            "chp to b_electricity": [3.0, 4.0],
+            "b_electricity to electricity_grid": [3.0, 4.0],
+            "b_electricity to power_to_heat": [0.0, 0.0],
+        }
+    )
+
+    result = postprocessing.merge_duplicate_flows_at_buses(
+        sequences, ["b_biomass", "b_electricity"]
+    )
+
+    # b_biomass is merged, b_electricity has two outflows and is kept completely
+    assert list(result.columns) == [
+        "biomass to b_biomass to biomass_dryer",
+        "chp to b_electricity",
+        "b_electricity to electricity_grid",
+        "b_electricity to power_to_heat",
+    ]

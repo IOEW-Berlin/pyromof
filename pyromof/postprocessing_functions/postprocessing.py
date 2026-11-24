@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 from oemof.solph import (
+    Bus,
     EnergySystem,
     processing,
 )
@@ -36,6 +37,24 @@ def add_sums_to_scalar_results(data, description, scalar_results):
     dict = {index: value for index, value in sums.items()}
     scalar_results = helpers.add_items_to_scalar_results(dict, description, scalar_results)
     return scalar_results
+
+
+def merge_duplicate_flows_at_buses(sequences, bus_labels):
+    """
+    Merges the inflow and outflow of buses with exactly one inflow and one outflow, as both
+    flows are equal due to the balance of the bus. The merged flow is named
+    "<source> to <bus> to <target>".
+    """
+    merged = sequences.copy()
+    for bus in bus_labels:
+        inflows = [col for col in merged.columns if col.endswith(f" to {bus}")]
+        outflows = [col for col in merged.columns if col.startswith(f"{bus} to ")]
+        if len(inflows) == 1 and len(outflows) == 1:
+            source = inflows[0].removesuffix(f" to {bus}")
+            merged = merged.drop(columns=inflows).rename(
+                columns={outflows[0]: f"{source} to {outflows[0]}"}
+            )
+    return merged
 
 
 def drop_flows_without_variable_costs(effective_variable_costs, path_varcosts):
@@ -335,7 +354,10 @@ def postprocess(dumping_space: Path | None = None, results: Path | None = None):
     # Create scalar results
     scalar_results = add_objective_to_scalar_results(es.results, scalar_results)
 
-    scalar_results = add_sums_to_scalar_results(sequences, "sum of flow", scalar_results)
+    bus_labels = [str(node.label) for node in es.nodes if isinstance(node, Bus)]
+    scalar_results = add_sums_to_scalar_results(
+        merge_duplicate_flows_at_buses(sequences, bus_labels), "sum of flow", scalar_results
+    )
     scalar_results = add_sums_to_scalar_results(
         drop_flows_without_variable_costs(
             effective_variable_costs,
